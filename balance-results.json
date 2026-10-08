@@ -1,0 +1,522 @@
+[
+  {
+    "strategy": "restraint",
+    "seed": 1,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 74,
+      "support": 81,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 68,
+      "support": 75,
+      "unity": 56
+    },
+    "targets": 2,
+    "demand": 49,
+    "troops": 210,
+    "cards": 87,
+    "transfers": 11,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "restraint",
+    "seed": 7,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 74,
+      "support": 81,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 68,
+      "support": 75,
+      "unity": 56
+    },
+    "targets": 2,
+    "demand": 49,
+    "troops": 210,
+    "cards": 87,
+    "transfers": 11,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "restraint",
+    "seed": 42,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 66,
+      "support": 81,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 60,
+      "support": 75,
+      "unity": 56
+    },
+    "targets": 2,
+    "demand": 49,
+    "troops": 210,
+    "cards": 88,
+    "transfers": 11,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "restraint",
+    "seed": 2027,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 66,
+      "support": 81,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 60,
+      "support": 75,
+      "unity": 56
+    },
+    "targets": 2,
+    "demand": 49,
+    "troops": 210,
+    "cards": 88,
+    "transfers": 9,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "restraint",
+    "seed": 931,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 66,
+      "support": 81,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 60,
+      "support": 75,
+      "unity": 56
+    },
+    "targets": 2,
+    "demand": 49,
+    "troops": 210,
+    "cards": 88,
+    "transfers": 11,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "cooperation",
+    "seed": 1,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 100,
+      "support": 100,
+      "unity": 93
+    },
+    "minimum": {
+      "money": 73,
+      "support": 75,
+      "unity": 48
+    },
+    "targets": 2,
+    "demand": 47,
+    "troops": 210,
+    "cards": 101,
+    "transfers": 10,
+    "recognition": true,
+    "cooperation": 15,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "cooperation",
+    "seed": 7,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 100,
+      "support": 100,
+      "unity": 93
+    },
+    "minimum": {
+      "money": 73,
+      "support": 75,
+      "unity": 48
+    },
+    "targets": 2,
+    "demand": 47,
+    "troops": 210,
+    "cards": 101,
+    "transfers": 10,
+    "recognition": true,
+    "cooperation": 15,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "cooperation",
+    "seed": 42,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 100,
+      "support": 100,
+      "unity": 89
+    },
+    "minimum": {
+      "money": 67,
+      "support": 75,
+      "unity": 44
+    },
+    "targets": 2,
+    "demand": 47,
+    "troops": 210,
+    "cards": 101,
+    "transfers": 9,
+    "recognition": true,
+    "cooperation": 16,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "cooperation",
+    "seed": 2027,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 97,
+      "support": 100,
+      "unity": 90
+    },
+    "minimum": {
+      "money": 67,
+      "support": 75,
+      "unity": 45
+    },
+    "targets": 2,
+    "demand": 47,
+    "troops": 210,
+    "cards": 101,
+    "transfers": 9,
+    "recognition": true,
+    "cooperation": 15,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "cooperation",
+    "seed": 931,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 97,
+      "support": 100,
+      "unity": 90
+    },
+    "minimum": {
+      "money": 67,
+      "support": 75,
+      "unity": 45
+    },
+    "targets": 2,
+    "demand": 47,
+    "troops": 210,
+    "cards": 101,
+    "transfers": 7,
+    "recognition": true,
+    "cooperation": 15,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "mixed",
+    "seed": 1,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 25,
+      "support": 76,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 23,
+      "support": 70,
+      "unity": 64
+    },
+    "targets": 3,
+    "demand": 66,
+    "troops": 210,
+    "cards": 95,
+    "transfers": 15,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "mixed",
+    "seed": 7,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 25,
+      "support": 76,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 23,
+      "support": 70,
+      "unity": 64
+    },
+    "targets": 3,
+    "demand": 65,
+    "troops": 210,
+    "cards": 95,
+    "transfers": 15,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "mixed",
+    "seed": 42,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 39,
+      "support": 76,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 37,
+      "support": 70,
+      "unity": 64
+    },
+    "targets": 3,
+    "demand": 64,
+    "troops": 210,
+    "cards": 93,
+    "transfers": 12,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "mixed",
+    "seed": 2027,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 25,
+      "support": 76,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 23,
+      "support": 70,
+      "unity": 64
+    },
+    "targets": 3,
+    "demand": 66,
+    "troops": 210,
+    "cards": 95,
+    "transfers": 14,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "mixed",
+    "seed": 931,
+    "day": 1461,
+    "completed": true,
+    "loss": null,
+    "resources": {
+      "money": 25,
+      "support": 76,
+      "unity": 100
+    },
+    "minimum": {
+      "money": 23,
+      "support": 70,
+      "unity": 64
+    },
+    "targets": 3,
+    "demand": 66,
+    "troops": 210,
+    "cards": 95,
+    "transfers": 14,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 0,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "expansion",
+    "seed": 1,
+    "day": 188,
+    "completed": false,
+    "loss": "money",
+    "resources": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "minimum": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "targets": 6,
+    "demand": 112,
+    "troops": 230,
+    "cards": 17,
+    "transfers": 18,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 1,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "expansion",
+    "seed": 7,
+    "day": 188,
+    "completed": false,
+    "loss": "money",
+    "resources": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "minimum": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "targets": 6,
+    "demand": 110,
+    "troops": 230,
+    "cards": 17,
+    "transfers": 17,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 1,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "expansion",
+    "seed": 42,
+    "day": 196,
+    "completed": false,
+    "loss": "money",
+    "resources": {
+      "money": 0,
+      "support": 33,
+      "unity": 61
+    },
+    "minimum": {
+      "money": 0,
+      "support": 33,
+      "unity": 61
+    },
+    "targets": 6,
+    "demand": 111,
+    "troops": 230,
+    "cards": 18,
+    "transfers": 18,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 1,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "expansion",
+    "seed": 2027,
+    "day": 196,
+    "completed": false,
+    "loss": "money",
+    "resources": {
+      "money": 0,
+      "support": 33,
+      "unity": 61
+    },
+    "minimum": {
+      "money": 0,
+      "support": 33,
+      "unity": 61
+    },
+    "targets": 6,
+    "demand": 113,
+    "troops": 230,
+    "cards": 18,
+    "transfers": 19,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 1,
+    "civiliansKilled": 0
+  },
+  {
+    "strategy": "expansion",
+    "seed": 931,
+    "day": 188,
+    "completed": false,
+    "loss": "money",
+    "resources": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "minimum": {
+      "money": 0,
+      "support": 33,
+      "unity": 63
+    },
+    "targets": 6,
+    "demand": 111,
+    "troops": 230,
+    "cards": 17,
+    "transfers": 18,
+    "recognition": false,
+    "cooperation": 0,
+    "soldiersKilled": 1,
+    "civiliansKilled": 0
+  }
+]

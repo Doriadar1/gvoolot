@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>גבולות — כיווני ארט</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;800&family=Secular+One&family=Rubik:wght@400;600;800&family=IBM+Plex+Sans+Hebrew:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--page:#dcd9cf;--txt:#2a2f2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--txt);font-family:Assistant,Arial,sans-serif}
+.intro{max-width:1240px;margin:0 auto;padding:28px 16px 6px}
+.intro h1{font-family:'Secular One';font-size:30px;margin:0 0 6px}
+.intro p{margin:4px 0;font-size:16px;line-height:1.55;max-width:820px}
+section.dir{max-width:1240px;margin:22px auto 40px;padding:0 16px}
+.dir h2{font-size:24px;margin:0 0 4px}
+.dir .sub{margin:0 0 14px;font-size:15px;opacity:.8}
+.row{display:flex;gap:22px;flex-wrap:wrap;justify-content:flex-start}
+.shot{display:flex;flex-direction:column;align-items:center;gap:8px}
+.shot figcaption{font-size:14px;font-weight:600}
+.phone{position:relative;width:390px;height:844px;overflow:hidden;border-radius:34px;box-shadow:0 0 0 8px #1d1f1e,0 14px 40px #0004}
+.phone svg{display:block}
+.maplayer{position:absolute;inset:0}
+.dim{position:absolute;inset:0}
+/* ---------- HUD ---------- */
+.hud{position:absolute;top:0;left:0;right:0;z-index:3;padding:14px 16px 10px}
+.hud .top{display:flex;justify-content:space-between;align-items:center}
+.hud .logo{font-size:23px;line-height:1}
+.hud .date{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.hud .stats{display:flex;gap:8px;margin-top:9px}
+.stat{flex:1;display:flex;align-items:center;gap:6px;padding:5px 8px;font-weight:800;font-size:17px}
+.stat .bar{flex:1;height:6px;border-radius:3px;overflow:hidden}
+.stat .bar i{display:block;height:100%}
+.hint{position:absolute;bottom:18px;left:60px;right:60px;z-index:3;text-align:center;font-size:14px;padding:9px 12px}
+.reset{position:absolute;bottom:16px;left:14px;z-index:3;width:44px;height:44px;display:grid;place-items:center}
+/* ---------- card ---------- */
+.card{position:absolute;left:18px;right:18px;top:128px;z-index:4}
+.card .tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;margin-bottom:8px}
+.card h3{margin:0 0 8px;font-size:26px;line-height:1.15}
+.card p{margin:0;font-size:16.5px;line-height:1.6}
+.choices{display:flex;gap:12px;margin-top:18px}
+.choices button{flex:1;min-height:52px;font-size:19px;cursor:pointer}
+/* ---------- sheet ---------- */
+.sheet{position:absolute;inset:0;overflow:hidden;padding:18px 16px}
+.sheet h4{margin:10px 0 6px;font-size:15px}
+.sheet .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.sheet .cell{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:600;text-align:center}
+
+/* ===== Direction A: cardboard theatre ===== */
+.A{--bg:#F3EAD6;--ink:#283D3B;--green:#4D9270;--yellow:#D6A63F;--red:#C8564C;--sea:#B8D5D8;--paper:#FBF5E6}
+.A .hud{background:var(--paper);border-bottom:3px solid var(--ink)}
+.A .hud .logo{font-family:'Secular One';color:var(--ink)}
+.A .hud .date{color:var(--ink)}
+.A .stat{border:2px solid var(--ink);border-radius:8px;background:var(--bg);color:var(--ink);box-shadow:2px 3px 0 var(--ink)}
+.A .stat .bar{background:#0001;border:1.5px solid var(--ink)}
+.A .stat .bar i{background:var(--green)}
+.A .hint{background:var(--paper);border:2px solid var(--ink);border-radius:6px;box-shadow:2px 3px 0 var(--ink);color:var(--ink);font-weight:600}
+.A .reset{background:var(--paper);border:2px solid var(--ink);border-radius:50%;box-shadow:2px 3px 0 var(--ink)}
+.A .dim{background:#283D3B66}
+.A .card{background:var(--paper);border:3px solid var(--ink);border-radius:6px;padding:12px 12px 14px;box-shadow:6px 7px 0 var(--ink);color:var(--ink)}
+.A .card::before{content:"";position:absolute;inset:5px;border:1.5px solid var(--ink);opacity:.35;border-radius:3px;pointer-events:none}
+.A .card .art{border:3px solid var(--ink);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.A .card .tag{background:var(--ink);color:var(--paper);border-radius:3px}
+.A .card h3{font-family:'Secular One';font-weight:400}
+.A .choices button{font-family:'Secular One';border:3px solid var(--ink);border-radius:6px;color:var(--ink);box-shadow:3px 4px 0 var(--ink)}
+.A .choices .yes{background:var(--green);color:var(--paper)}
+.A .choices .no{background:var(--bg)}
+.A .sheet{background:var(--bg);color:var(--ink)}
+.A .sheet h4{font-family:'Secular One';font-weight:400;border-bottom:2px solid var(--ink);padding-bottom:3px}
+
+/* ===== Direction B: government toys ===== */
+.B{--bg:#E6D5B2;--ink:#283B56;--green:#42856C;--yellow:#E5AE43;--red:#C75450;--sea:#A9CDDD;--paper:#F7EDD6;--wood:#C8995C;--woodD:#9C7240}
+.B, .B button{font-family:Rubik,Arial,sans-serif}
+.B .hud{background:linear-gradient(#0000,#0000);padding-top:12px}
+.B .hud .top{background:var(--ink);color:var(--paper);border-radius:16px;padding:8px 14px;box-shadow:0 5px 0 #17243a}
+.B .hud .logo{font-weight:800}
+.B .hud .date{color:var(--paper)}
+.B .hud .stats{margin-top:12px}
+.B .stat{background:var(--paper);border-radius:14px;color:var(--ink);box-shadow:0 4px 0 var(--woodD)}
+.B .stat .bar{background:#283B5620}
+.B .stat .bar i{background:var(--green);border-radius:3px}
+.B .hint{background:var(--paper);border-radius:14px;box-shadow:0 4px 0 var(--woodD);color:var(--ink);font-weight:600}
+.B .reset{background:var(--paper);border-radius:14px;box-shadow:0 4px 0 var(--woodD)}
+.B .dim{background:#283B5670}
+.B .card{background:var(--paper);border-radius:24px;padding:12px 12px 0;box-shadow:0 8px 0 var(--woodD),0 16px 30px #0004;color:var(--ink)}
+.B .card .art{border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:inset 0 0 0 4px #283B5622}
+.B .card .tag{background:var(--yellow);color:var(--ink);border-radius:20px}
+.B .card h3{font-weight:800}
+.B .choices{margin:18px -12px 0;gap:0}
+.B .choices button{border:0;min-height:60px;font-weight:800;color:var(--paper)}
+.B .choices .yes{background:var(--green);border-radius:0 0 24px 0;box-shadow:inset 0 -6px 0 #2c6450}
+.B .choices .no{background:var(--ink);border-radius:0 0 0 24px;box-shadow:inset 0 -6px 0 #17243a}
+.B .sheet{background:var(--bg);color:var(--ink)}
+.B .sheet h4{font-weight:800;background:var(--paper);display:inline-block;padding:3px 12px;border-radius:12px;box-shadow:0 3px 0 var(--woodD)}
+
+.notes{max-width:1240px;margin:0 auto 50px;padding:0 16px;font-size:15px;line-height:1.6}
+.notes li{margin-bottom:4px}
+/* ===== Direction C: planning bureau ===== */
+.C{--bg:#1E3A5C;--ink:#EAF2F7;--green:#5FBF8F;--yellow:#F2C94C;--red:#FF6B5B;--paper:#F3F0E6;--navy:#10243B}
+.C, .C button{font-family:'IBM Plex Sans Hebrew',Arial,sans-serif}
+.C .hud{background:#16304D;border-bottom:1px solid #EAF2F799}
+.C .hud .logo{font-weight:700;letter-spacing:.12em;color:var(--ink)}
+.C .hud .date{color:var(--ink);font-variant-numeric:tabular-nums}
+.C .stat{border:1px solid #EAF2F7aa;color:var(--ink);font-weight:700}
+.C .stat .bar{background:#ffffff22;border-radius:0}
+.C .stat .bar i{background:var(--green)}
+.C .hint{background:#16304Dee;border:1px dashed var(--ink);color:var(--ink)}
+.C .reset{background:#16304D;border:1px solid var(--ink)}
+.C .dim{background:#0b1a2bb8}
+.C .card{background:var(--paper);color:var(--navy);border:1px solid var(--navy);border-radius:2px;padding:12px 12px 16px;box-shadow:0 14px 34px #000a}
+.C .card::before{content:"";position:absolute;inset:4px;border:1px solid #10243B40;pointer-events:none}
+.C .card .art{border:1px solid var(--navy);margin-bottom:10px}
+.C .card .tag{background:none;border:1px solid var(--navy);border-radius:0;letter-spacing:.12em}
+.C .card h3{font-weight:700;border-bottom:2px solid var(--navy);padding-bottom:6px}
+.C .choices{gap:16px;margin-top:20px}
+.C .choices button{background:transparent;border:4px double currentColor;border-radius:6px;font-weight:700;font-size:21px;letter-spacing:.14em;opacity:.9}
+.C .choices .yes{color:#2E7D5B;transform:rotate(-2.5deg)}
+.C .choices .no{color:#C0392B;transform:rotate(2deg)}
+.C .sheet{background:var(--bg);color:var(--ink);background-image:linear-gradient(#EAF2F712 1px,transparent 1px),linear-gradient(90deg,#EAF2F712 1px,transparent 1px);background-size:20px 20px}
+.C .sheet h4{font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--ink);padding-bottom:3px}
+
+@media (max-width:440px){.phone{transform:scale(.86);transform-origin:top center;margin-bottom:-118px}}
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>גבולות — שלושה כיווני ארט לאישור</h1>
+  <p>לפי הבריף (DESIGN_BRIEF_AND_INVENTORY.md) והאבטיפוס (LOOK_HERE.html). כל הארט כאן מצויר בקוד (SVG) — אין תמונות. אותם מיקומים, אותם מספרים ואותו קלף ״רק רועה ועדר״ בכל הכיוונים, כדי שאפשר יהיה להשוות.</p>
+  <p>לכל אחד משלושת הכיוונים שלושה מסכים בגודל טלפון (390×844): מפה בזמן גרירה, קלף החלטה, ודף תקריב של כוחות ושל חווה בשלושת שלבי הגדילה.</p>
+</div>
+
+<section class="dir A">
+  <h2>כיוון א׳ — תיאטרון קרטון <small style="font-weight:400">(המומלץ בבריף)</small></h2>
+  <p class="sub">צורות חתוכות מנייר, קו דיו עבה, צל אחד קשה וקצר. ההומור באביזר ובקומפוזיציה.</p>
+  <div class="row" id="rowA"></div>
+</section>
+
+<section class="dir B">
+  <h2>כיוון ב׳ — צעצועי ממשלה</h2>
+  <p class="sub">המפה כמו לוח משחק, יישובים כמו חלקי עץ צבועים, דיסקיות עם עובי. תחושת משחק קלילה מול תוצאות רציניות.</p>
+  <div class="row" id="rowB"></div>
+</section>
+
+<section class="dir C">
+  <h2>כיוון ג׳ — לשכת התכנון</h2>
+  <p class="sub">הכול נראה כמו ניירת תכנון של המדינה: המפה היא שרטוט טכני (תוכנית מתאר) על נייר כחול, היישובים הם שרטוטי מגרש מלמעלה, וההחלטה נחתמת בחותמת גומי. ההומור: הרחבה נראית כמו טופס, והמחיר מופיע כקו אדום בשוליים.</p>
+  <div class="row" id="rowC"></div>
+</section>
+
+<div class="notes">
+  <b>מה נשמר מהאבטיפוס:</b>
+  <ul>
+    <li>מיקומי כל הנקודות והגבולות זהים לאבטיפוס (אותה גאומטריה). אין מיני־מפה, אין סוויפ — החלטות בכפתורים.</li>
+    <li>מספרי חיילים, תאריכים וכל הטקסט העברי הם טקסט חי, לא חלק מהאיור.</li>
+    <li>מצב מסוכן וחוסר כוח מסומנים גם בצורה (סימן קריאה, מגן חסר), לא רק בצבע.</li>
+    <li>נקודות האיום האדומות הן שכבה נפרדת ועדינה; מוקדי האוכלוסייה הם מרקם רקע בלבד.</li>
+  </ul>
+</div>
+
+<script>
+const TH={
+  A:{bg:'#F3EAD6',ink:'#283D3B',green:'#4D9270',yellow:'#D6A63F',red:'#C8564C',sea:'#B8D5D8',paper:'#FBF5E6',land:'#E2DBB9',roof:'#C8564C',wall:'#FBF5E6',font:"Secular One",numW:400},
+  C:{bg:'#1E3A5C',ink:'#EAF2F7',green:'#5FBF8F',yellow:'#F2C94C',red:'#FF6B5B',sea:'#17304D',paper:'#F3F0E6',land:'#244A70',font:"IBM Plex Sans Hebrew",numW:700},
+  B:{bg:'#E6D5B2',ink:'#283B56',green:'#42856C',yellow:'#E5AE43',red:'#C75450',sea:'#A9CDDD',paper:'#F7EDD6',land:'#D2BE8C',roof:'#C75450',wall:'#F4E6C8',wood:'#C8995C',woodD:'#9C7240',font:"Rubik",numW:800}
+};
+// darken/lighten a hex colour
+function sh(hex,a){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
+  const f=v=>Math.max(0,Math.min(255,Math.round(a<0?v*(1+a):v+(255-v)*a)));
+  return '#'+((1<<24)+(f(r)<<16)+(f(g)<<8)+f(b)).toString(16).slice(1)}
+
+/* ---------- map geometry (copied from the prototype) ---------- */
+const SEA='M0 0H132L112 140 90 280 61 391 0 495Z';
+const WB='M228 83Q335 91 361 161L364 382Q336 450 220 441L198 397 176 276 198 133Z';
+const GZ='M47 515L81 497 128 615 91 659 34 599Z';
+const FENCE='M338 93Q232 72 200 135L173 267 198 396Q246 446 344 421 M48 514L81 497 128 615 91 659';
+const THREATS=[[262,146],[256,236],[247,300],[244,420],[64,562],[272,330]];
+
+/* ---------- small icons ---------- */
+function icoMoney(c){return `<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="${c.yellow}" stroke="${c.ink}" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="none" stroke="${c.ink}" stroke-width="1.5"/></svg>`}
+function icoWorld(c){return `<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="${c.sea}" stroke="${c.ink}" stroke-width="2"/><ellipse cx="10" cy="10" rx="3.5" ry="8" fill="none" stroke="${c.ink}" stroke-width="1.5"/><path d="M2 10H18" stroke="${c.ink}" stroke-width="1.5"/></svg>`}
+function icoUnity(c){return `<svg width="22" height="20" viewBox="0 0 22 20"><circle cx="7" cy="6" r="3.5" fill="${c.paper}" stroke="${c.ink}" stroke-width="1.8"/><circle cx="15" cy="6" r="3.5" fill="${c.paper}" stroke="${c.ink}" stroke-width="1.8"/><path d="M1.5 18Q2 11 7 11T12.5 18M9.5 18Q10 11 15 11T20.5 18" fill="${c.green}" stroke="${c.ink}" stroke-width="1.8"/></svg>`}
+function icoPause(c,col){return `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="${col}" stroke-width="2"/><path d="M6 5V11M10 5V11" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`}
+function icoReset(c){return `<svg width="22" height="22" viewBox="0 0 22 22"><path d="M17 11A6 6 0 1 1 11 5H15M12 2L15 5 12 8" fill="none" stroke="${c.ink}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+
+function hud(k,paused){const c=TH[k];const dc=k==='B'?c.paper:c.ink;
+  return `<div class="hud"><div class="top"><div class="logo">גבולות</div>
+  <div class="date">${icoPause(c,dc)}<span>1 בינו׳ 2027${paused?' · עצור':''}</span></div></div>
+  <div class="stats">
+   <div class="stat">${icoMoney(c)}<span>80</span><span class="bar"><i style="width:80%"></i></span></div>
+   <div class="stat">${icoWorld(c)}<span>75</span><span class="bar"><i style="width:75%"></i></span></div>
+   <div class="stat">${icoUnity(c)}<span>70</span><span class="bar"><i style="width:70%"></i></span></div>
+  </div></div>`}
+
+/* ---------- force tokens ---------- */
+const COL={ok:'green',mid:'yellow',bad:'red'};
+function token(k,x,y,n,state,o={}){if(k==='C')return tokenC(x,y,n,state,o);const c=TH[k],r=o.r||27,col=c[COL[state]];let s='';
+  const fs=r>24?22:18;
+  const num=`<text x="0" y="${fs*.36}" text-anchor="middle" font-family="${c.font}" font-weight="${c.numW}" font-size="${fs}" fill="#fff">${n}</text>`;
+  if(k==='A'){
+    if(o.reserve) s+=`<circle cx="-6" cy="-6" r="${r}" fill="${sh(col,.25)}" stroke="${c.ink}" stroke-width="3"/>`;
+    s+=`<circle cx="3" cy="4" r="${r}" fill="${c.ink}" opacity=".28"/><circle r="${r}" fill="${col}" stroke="${c.ink}" stroke-width="3"/>${num}`;
+  }else{
+    const e=sh(col,-.32);
+    if(o.reserve) s+=`<circle cy="11" r="${r}" fill="${sh(col,-.45)}"/><circle cy="7" r="${r}" fill="${sh(col,-.1)}"/>`;
+    s+=`<ellipse cy="${r*.2+6}" rx="${r+1}" ry="${r*.9}" fill="#0002"/><circle cy="5" r="${r}" fill="${e}"/><circle r="${r}" fill="${col}"/>
+        <path d="M${-r*.62} ${-r*.5}A${r*.8} ${r*.8} 0 0 1 ${r*.2} ${-r*.8}" stroke="#fff" stroke-opacity=".45" stroke-width="3" fill="none" stroke-linecap="round"/>${num}`;
+  }
+  if(state==='bad') s+=badge(k,r*.72,-r*.72);
+  if(o.reserve&&k==='B') s+=crate(c,-r*.75,-r*.7);
+  if(o.label) s+=`<text y="${r+20}" text-anchor="middle" font-family="${c.font}" font-weight="${c.numW}" font-size="13" fill="${c.ink}" paint-order="stroke" stroke="${c.bg}" stroke-width="4">${o.label}</text>`;
+  return `<g transform="translate(${x} ${y})">${s}</g>`}
+function badge(k,x,y){const c=TH[k];
+  return `<g transform="translate(${x} ${y})"><path d="M0 -11L10 7H-10Z" fill="${c.red}" stroke="${k==='A'?c.ink:'#fff'}" stroke-width="2.4" stroke-linejoin="round"/><path d="M0 -4V1.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cy="4.6" r="1.4" fill="#fff"/></g>`}
+function crate(c,x,y){return `<g transform="translate(${x} ${y})"><rect x="-8" y="-7" width="16" height="13" rx="2" fill="${c.wood}" stroke="${c.woodD}" stroke-width="2"/><path d="M-8 -1H8" stroke="${c.woodD}" stroke-width="2"/></g>`}
+// security target: missing = dashed ring + broken shield; partial = half filled
+function target(k,x,y,have,need,o={}){if(k==='C')return targetC(x,y,have,need,o);const c=TH[k],r=o.r||24;let s='';
+  const part=have/need, missing=have===0;
+  const frac=Math.max(0,Math.min(1,part));
+  if(k==='A'){
+    s+=`<circle r="${r}" fill="${c.paper}" stroke="${c.ink}" stroke-width="2.6" stroke-dasharray="6 4"/>`;
+    if(!missing){const a=frac*2*Math.PI-Math.PI/2,lg=frac>.5?1:0;
+      s+= frac>=1?`<circle r="${r-5}" fill="${c.green}" stroke="${c.ink}" stroke-width="2"/>`
+        :`<path d="M0 0L0 ${-r+5}A${r-5} ${r-5} 0 ${lg} 1 ${(r-5)*Math.cos(a)} ${(r-5)*Math.sin(a)}Z" fill="${c.yellow}" stroke="${c.ink}" stroke-width="2"/>`;}
+    s+=`<text y="7" text-anchor="middle" font-family="${c.font}" font-size="19" fill="${c.ink}" paint-order="stroke" stroke="${c.paper}" stroke-width="4">${have}</text>`;
+  }else{
+    s+=`<ellipse cy="3" rx="${r+2}" ry="${r}" fill="${sh(c.land,-.25)}"/><circle r="${r}" fill="${sh(c.land,-.12)}" stroke="${c.paper}" stroke-width="2.4" stroke-dasharray="5 4"/>`;
+    if(!missing){const a=frac*2*Math.PI-Math.PI/2,lg=frac>.5?1:0;
+      s+= frac>=1?`<circle cy="-2" r="${r-4}" fill="${c.green}"/>`
+        :`<path d="M0 -2L0 ${-r+2}A${r-4} ${r-4} 0 ${lg} 1 ${(r-4)*Math.cos(a)} ${(r-4)*Math.sin(a)-2}Z" fill="${c.yellow}"/>`;}
+    s+=`<text y="6" text-anchor="middle" font-family="${c.font}" font-weight="800" font-size="18" fill="${frac>=1?'#fff':c.ink}">${have}</text>`;
+  }
+  if(frac<1) s+=shield(k,r*.8,-r*.8);
+  return `<g transform="translate(${x} ${y})">${s}</g>`}
+function shield(k,x,y){const c=TH[k],st=k==='C'?'#10243B':c.ink;
+  return `<g transform="translate(${x} ${y})"><path d="M0 -10L8 -7V0Q8 7 0 11Q-8 7 -8 0V-7Z" fill="${c.paper}" stroke="${st}" stroke-width="2.2" stroke-linejoin="round"/>
+   <path d="M0 -10V11Q-8 7 -8 0V-7Z" fill="${c.red}"/><path d="M0 -10L-2 -3 1 1 -1 5 0 11" fill="none" stroke="${st}" stroke-width="1.6"/></g>`}
+
+/* ---------- houses / settlement pieces (anchor = bottom centre) ---------- */
+function houseA(c,x,y,w,h,roof){const rh=h*.7;
+  return `<g transform="translate(${x} ${y})">
+   <path d="M${-w/2+2} ${-h+2}H${w/2+2}V2H${-w/2+2}Z" fill="${c.ink}" opacity=".25"/>
+   <rect x="${-w/2}" y="${-h}" width="${w}" height="${h}" fill="${c.wall}" stroke="${c.ink}" stroke-width="2"/>
+   <path d="M${-w/2-3} ${-h}L0 ${-h-rh}L${w/2+3} ${-h}Z" fill="${roof||c.roof}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>
+   <rect x="${-w*.14}" y="${-h*.55}" width="${w*.28}" height="${h*.55}" fill="${c.ink}"/></g>`}
+function houseB(c,x,y,w,h,roof){const d=w*.32,rh=h*.62;
+  return `<g transform="translate(${x} ${y})">
+   <path d="M${w/2} 0L${w/2+d} ${-d*.6}V${-h-d*.6}L${w/2} ${-h}Z" fill="${sh(c.wall,-.2)}"/>
+   <rect x="${-w/2}" y="${-h}" width="${w}" height="${h}" fill="${c.wall}"/>
+   <path d="M0 ${-h-rh}L${d} ${-h-rh-d*.6}L${w/2+d+2} ${-h-d*.6}L${w/2+2} ${-h}Z" fill="${sh(roof||c.roof,-.25)}"/>
+   <path d="M${-w/2-2} ${-h}L0 ${-h-rh}L${w/2+2} ${-h}Z" fill="${roof||c.roof}"/>
+   <rect x="${-w*.14}" y="${-h*.5}" width="${w*.28}" height="${h*.5}" rx="1" fill="${c.ink}" opacity=".85"/></g>`}
+function sheep(k,x,y,s=1,flip){const c=TH[k];const f=flip?-1:1;
+  if(k==='A') return `<g transform="translate(${x} ${y}) scale(${s*f} ${s})">
+    <path d="M-7 0V5M4 0V5" stroke="${c.ink}" stroke-width="2"/><path d="M-10 -2Q-12 -9 -5 -10Q-2 -15 3 -11Q10 -12 10 -5Q12 1 4 1H-7Q-12 1 -10 -2Z" fill="#fff" stroke="${c.ink}" stroke-width="2"/>
+    <ellipse cx="11" cy="-7" rx="4" ry="3.4" fill="${c.ink}"/></g>`;
+  return `<g transform="translate(${x} ${y}) scale(${s*f} ${s})"><ellipse cy="4" rx="11" ry="3" fill="#0002"/>
+    <rect x="-7" y="-2" width="3" height="6" fill="${c.ink}"/><rect x="3" y="-2" width="3" height="6" fill="${c.ink}"/>
+    <rect x="-11" y="-12" width="20" height="11" rx="5.5" fill="#fff"/><rect x="-11" y="-12" width="20" height="4" rx="2" fill="#fff" opacity=".6"/>
+    <rect x="7" y="-15" width="7" height="8" rx="3" fill="${c.ink}"/></g>`}
+function tree(k,x,y,s=1){const c=TH[k];
+  if(k==='A') return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0V-9" stroke="${c.ink}" stroke-width="2.4"/><path d="M-9 -12Q-10 -22 0 -22Q10 -22 9 -12Q9 -7 0 -7Q-9 -7 -9 -12Z" fill="${c.green}" stroke="${c.ink}" stroke-width="2"/></g>`;
+  return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="-9" width="4" height="9" fill="${c.woodD}"/><circle cy="-15" r="9" fill="${sh(c.green,-.2)}"/><circle cx="-1.5" cy="-16.5" r="8" fill="${c.green}"/></g>`}
+function tank(k,x,y){const c=TH[k];
+  if(k==='A') return `<g transform="translate(${x} ${y})"><path d="M-5 0L-4 -12M5 0L4 -12" stroke="${c.ink}" stroke-width="2"/><rect x="-8" y="-24" width="16" height="12" rx="2" fill="${c.sea}" stroke="${c.ink}" stroke-width="2"/></g>`;
+  return `<g transform="translate(${x} ${y})"><rect x="-5" y="-12" width="2.4" height="12" fill="${c.woodD}"/><rect x="3" y="-12" width="2.4" height="12" fill="${c.woodD}"/><rect x="-8" y="-25" width="16" height="13" rx="3" fill="${sh(c.sea,-.15)}"/><ellipse cy="-25" rx="8" ry="3" fill="${c.sea}"/></g>`}
+function fenceA(c,x,y,w){let s=`<path d="M${x} ${y-4}H${x+w}M${x} ${y-8}H${x+w}" stroke="${c.ink}" stroke-width="1.6"/>`;for(let i=0;i<=w;i+=6)s+=`<path d="M${x+i} ${y}V${y-11}" stroke="${c.ink}" stroke-width="2"/>`;return s}
+function fenceB(c,x,y,w){let s=`<rect x="${x}" y="${y-8}" width="${w}" height="2.4" fill="${c.wood}"/><rect x="${x}" y="${y-4}" width="${w}" height="2.4" fill="${c.wood}"/>`;for(let i=0;i<=w;i+=7)s+=`<rect x="${x+i-1.2}" y="${y-11}" width="2.6" height="11" fill="${c.woodD}"/>`;return s}
+
+// stage 1 = farm, 2 = village, 3 = settlement. Same base, same anchor.
+function settlement(k,stage,x,y,s=1){if(k==='C')return settlementC(stage,x,y-6,s);const c=TH[k];let g='';
+  const H=k==='A'?houseA:houseB, F=k==='A'?fenceA:fenceB;
+  if(k==='A') g+=`<ellipse cx="2" cy="2" rx="34" ry="8" fill="${c.ink}" opacity=".18"/><ellipse rx="34" ry="8" fill="${sh(c.land,-.14)}" stroke="${c.ink}" stroke-width="2"/>`;
+  else g+=`<ellipse cy="5" rx="35" ry="10" fill="${c.woodD}"/><ellipse rx="35" ry="10" fill="${c.wood}"/><ellipse cy="-1" rx="30" ry="7" fill="${sh(c.wood,.15)}"/>`;
+  if(stage===1){ g+=F(c,-28,2,18)+H(c,4,2,20,14,k==='A'?'#8f9c95':'#8fa2a8')+sheep(k,-17,-2,.6)+tree(k,24,0,.7);}
+  if(stage===2){ g+=tree(k,-24,-2,.8)+H(c,-9,-2,16,13)+H(c,10,-3,18,14,k==='A'?c.yellow:c.yellow)+H(c,-1,5,15,11)+sheep(k,22,4,.5);}
+  if(stage===3){ g+=tank(k,-22,-2)+H(c,-6,-4,15,14)+H(c,11,-5,15,16,c.yellow)+H(c,26,1,12,11)+H(c,-18,5,14,11)+H(c,2,6,16,12,c.yellow)+tree(k,-30,6,.6);}
+  return `<g transform="translate(${x} ${y}) scale(${s})">${g}</g>`}
+
+/* ---------- map ---------- */
+function mapSVG(k,opt={}){if(k==='C')return mapC(opt);const c=TH[k];let s='';
+  if(k==='A'){
+    s+=`<defs><pattern id="popA" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.3" fill="${c.ink}" opacity=".12"/><circle cx="10" cy="10" r="1" fill="${c.ink}" opacity=".09"/></pattern></defs>
+    <rect width="420" height="760" fill="${c.bg}"/>
+    <path d="${SEA}" fill="${c.sea}"/><path d="${SEA}" fill="none" stroke="${c.ink}" stroke-width="2.5"/>`;
+    for(const [wx,wy] of [[22,60],[58,130],[18,230],[48,320],[14,420]]) s+=`<path d="M${wx} ${wy}q6 -5 12 0t12 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+    for(const p of [WB,GZ]) s+=`<path d="${p}" transform="translate(4 5)" fill="${c.ink}" opacity=".16"/><path d="${p}" fill="${c.land}" stroke="${c.ink}" stroke-width="2.2"/><path d="${p}" fill="url(#popA)"/>`;
+    s+=`<path d="${FENCE}" fill="none" stroke="${c.ink}" stroke-width="4" stroke-dasharray="11 6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s+=`<text x="300" y="128" font-family="Secular One" font-size="20" fill="${c.ink}" opacity=".45">יו״ש</text><text x="96" y="690" font-family="Secular One" font-size="20" fill="${c.ink}" opacity=".45">עזה</text>`;
+  }else{
+    s+=`<defs><pattern id="gridB" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="14" cy="14" r="1.4" fill="${c.ink}" opacity=".13"/></pattern>
+      <pattern id="popB" width="16" height="16" patternUnits="userSpaceOnUse"><rect x="3" y="3" width="3" height="3" fill="${c.ink}" opacity=".09"/></pattern></defs>
+    <rect width="420" height="760" fill="${c.bg}"/><rect width="420" height="760" fill="url(#gridB)"/>
+    <path d="${SEA}" fill="${c.sea}"/><path d="${SEA}" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>`;
+    for(const [wx,wy] of [[22,60],[58,130],[18,230],[48,320],[14,420]]) s+=`<path d="M${wx} ${wy}q6 -5 12 0t12 0" fill="none" stroke="${sh(c.sea,-.2)}" stroke-width="3" stroke-linecap="round"/>`;
+    for(const p of [WB,GZ]) s+=`<path d="${p}" transform="translate(0 8)" fill="${c.woodD}"/><path d="${p}" transform="translate(0 4)" fill="${sh(c.land,-.2)}"/><path d="${p}" fill="${c.land}"/><path d="${p}" fill="url(#popB)"/>`;
+    s+=`<path d="${FENCE}" transform="translate(0 3)" fill="none" stroke="${sh(c.ink,-.3)}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${FENCE}" fill="none" stroke="${c.ink}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${FENCE}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>`;
+    s+=`<text x="298" y="128" font-family="Rubik" font-weight="800" font-size="19" fill="${c.ink}" opacity=".4">יו״ש</text><text x="96" y="690" font-family="Rubik" font-weight="800" font-size="19" fill="${c.ink}" opacity=".4">עזה</text>`;
+  }
+  // threat dots: separate, subtle game layer
+  for(const [tx,ty] of THREATS) s+=`<circle cx="${tx}" cy="${ty}" r="3.2" fill="${c.red}" opacity=".8"><animate attributeName="cx" values="${tx};${tx+3};${tx}" dur="3.5s" repeatCount="indefinite"/></circle>`;
+  // settlements with their security target next to them
+  s+=settlement(k,3,300,190,.9)+target(k,332,214,10,15);
+  s+=settlement(k,2,296,370,.9)+target(k,332,392,10,10);
+  s+=settlement(k,1,300,272,.85)+target(k,334,292,0,10);
+  if(opt.drag){ // reserve -> new farm, dots moving along the path
+    const d='M305 578C360 480 360 380 334 300';
+    s+=k==='A'?`<path d="${d}" fill="none" stroke="${c.ink}" stroke-width="3.5" stroke-dasharray="2 8" stroke-linecap="round"/>`
+             :`<path d="${d}" fill="none" stroke="${c.paper}" stroke-width="7" stroke-linecap="round" opacity=".85"/><path d="${d}" fill="none" stroke="${c.green}" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round"/>`;
+    for(let i=0;i<5;i++) s+=`<circle r="${k==='A'?4.5:5}" fill="${c.green}" stroke="${k==='A'?c.ink:'#fff'}" stroke-width="1.8"><animateMotion dur="2.4s" begin="${i*.35}s" repeatCount="indefinite" path="${d}"/></circle>`;
+  }
+  s+=token(k,200,135,20,'mid')+token(k,173,267,30,'ok')+token(k,198,396,20,'mid')+token(k,115,487,30,'ok')+token(k,182,594,30,'ok')+token(k,66,598,10,'bad')+token(k,305,587,35,'ok',{reserve:1,label:'מילואים'});
+  if(opt.drag) s+=hand(k,305,587);
+  return `<svg width="390" height="760" viewBox="0 0 420 760" preserveAspectRatio="xMidYMid slice">${s}</svg>`}
+function hand(k,x,y){const c=TH[k];
+  return `<g transform="translate(${x+10} ${y+14})"><path d="M0 0V-18Q0 -23 4 -23T8 -18V-6L10 -9Q14 -12 16 -8L17 -6Q21 -8 22 -4Q26 -5 26 0V8Q26 18 16 20H6Q0 18 -3 12L-9 2Q-11 -2 -7 -3Q-4 -3 0 2Z" fill="#fff" stroke="${c.ink}" stroke-width="2.4" stroke-linejoin="round"/></g>`}
+
+/* ---------- card art: "רק רועה ועדר" ---------- */
+function cardArtA(){const c=TH.A;const k='A';
+  let s=`<rect width="340" height="220" fill="#EFE3C6"/>
+   <circle cx="262" cy="52" r="22" fill="${c.yellow}" stroke="${c.ink}" stroke-width="3"/>
+   <path d="M20 70q10 -12 22 -4q8 -10 20 -2q14 0 12 10H18q-4 -4 2 -4Z" fill="#fff" stroke="${c.ink}" stroke-width="2.5"/>
+   <!-- cardboard strut behind the hill -->
+   <path d="M220 150L262 104 268 150" fill="#B89A6A" stroke="${c.ink}" stroke-width="2.5"/>
+   <path d="M150 180Q175 96 240 92Q300 92 330 180Z" transform="translate(5 5)" fill="${c.ink}" opacity=".22"/>
+   <path d="M150 180Q175 96 240 92Q300 92 330 180Z" fill="${c.green}" stroke="${c.ink}" stroke-width="3"/>
+   ${houseA(c,242,96,26,18)}
+   <!-- far too many faces for "one family" -->
+   <g stroke="${c.ink}" stroke-width="1.6" fill="#F2C9A0"><circle cx="232" cy="86" r="3"/><circle cx="238" cy="84" r="3"/><circle cx="246" cy="84" r="3"/><circle cx="252" cy="86" r="3"/></g>
+   <rect y="178" width="340" height="42" fill="#B7925C" stroke="${c.ink}" stroke-width="3"/>
+   <path d="M0 192H340M0 206H340" stroke="${c.ink}" stroke-width="1.5" opacity=".35"/>`;
+  s+=sheep(k,150,178,1.5)+sheep(k,188,184,1.4,1)+sheep(k,118,190,1.3);
+  // shepherd with an oversized staff
+  s+=`<g transform="translate(70 186)">
+   <path d="M34 4V-128Q34 -150 50 -148Q62 -146 58 -132" fill="none" stroke="${c.ink}" stroke-width="7" stroke-linecap="round"/>
+   <path d="M34 4V-128Q34 -150 50 -148Q62 -146 58 -132" fill="none" stroke="#B7925C" stroke-width="3.2" stroke-linecap="round"/>
+   <path d="M-24 2L-12 -62Q0 -72 12 -62L24 2Z" transform="translate(3 4)" fill="${c.ink}" opacity=".25"/>
+   <path d="M-24 2L-12 -62Q0 -72 12 -62L24 2Z" fill="${c.yellow}" stroke="${c.ink}" stroke-width="3" stroke-linejoin="round"/>
+   <path d="M10 -48L32 -60" stroke="${c.ink}" stroke-width="8" stroke-linecap="round"/><path d="M10 -48L32 -60" stroke="#F2C9A0" stroke-width="4" stroke-linecap="round"/>
+   <circle cy="-78" r="16" fill="#F2C9A0" stroke="${c.ink}" stroke-width="3"/>
+   <path d="M-17 -84Q0 -104 17 -84Z" fill="${c.ink}"/><path d="M-22 -84H22" stroke="${c.ink}" stroke-width="4" stroke-linecap="round"/>
+   <circle cx="-5" cy="-78" r="2" fill="${c.ink}"/><circle cx="6" cy="-78" r="2" fill="${c.ink}"/>
+   <path d="M-4 -68Q1 -65 6 -68" fill="none" stroke="${c.ink}" stroke-width="2" stroke-linecap="round"/>
+   <path d="M1 -78L4 -72H0" fill="none" stroke="${c.ink}" stroke-width="1.8"/></g>`;
+  // theatre curtains
+  s+=`<path d="M0 0H30Q22 90 34 220H0Z" fill="${c.red}" stroke="${c.ink}" stroke-width="3"/><path d="M14 10Q10 110 18 220" stroke="${c.ink}" stroke-width="1.6" fill="none" opacity=".4"/>
+      <path d="M340 0H310Q318 90 306 220H340Z" fill="${c.red}" stroke="${c.ink}" stroke-width="3"/><path d="M326 10Q330 110 322 220" stroke="${c.ink}" stroke-width="1.6" fill="none" opacity=".4"/>`;
+  let val='M0 0H340V16';for(let i=340;i>0;i-=34)val+=`Q${i-17} 34 ${i-34} 16`;
+  s+=`<path d="${val}Z" fill="${c.red}" stroke="${c.ink}" stroke-width="3"/>`;
+  return `<svg viewBox="0 0 340 220" width="100%" style="display:block">${s}</svg>`}
+
+function cardArtB(){const c=TH.B,k='B';
+  let s=`<rect width="340" height="220" fill="#BFDDE8"/>
+   <circle cx="60" cy="48" r="20" fill="${c.yellow}"/><circle cx="54" cy="42" r="7" fill="#fff" opacity=".4"/>
+   <rect x="228" y="34" width="44" height="14" rx="7" fill="#fff"/><rect x="240" y="26" width="24" height="14" rx="7" fill="#fff"/>
+   <!-- board ground -->
+   <path d="M0 150H340V220H0Z" fill="${c.land}"/><path d="M0 150H340V156H0Z" fill="${sh(c.land,.2)}"/>
+   <!-- stacked hill tile -->
+   <path d="M150 158L170 104H300L322 158Z" fill="${c.woodD}" transform="translate(0 8)"/>
+   <path d="M150 158L170 104H300L322 158Z" fill="${sh(c.green,-.15)}"/>
+   <path d="M170 104H300L306 116H164Z" fill="${c.green}"/>`;
+  s+=houseB(c,236,108,30,20);
+  s+=`<g fill="#F2C9A0"><circle cx="226" cy="97" r="3.2"/><circle cx="233" cy="95" r="3.2"/><circle cx="241" cy="95" r="3.2"/><circle cx="248" cy="97" r="3.2"/></g>`;
+  s+=sheep(k,176,172,1.6)+sheep(k,210,182,1.5,1)+sheep(k,146,190,1.5)+tree(k,305,150,1.2);
+  // toy shepherd pawn, big head
+  s+=`<g transform="translate(96 196)"><ellipse cy="4" rx="26" ry="7" fill="#0003"/>
+    <rect x="30" y="-150" width="7" height="154" rx="3" fill="${c.woodD}"/><path d="M33 -150Q33 -170 50 -166Q60 -162 56 -150" fill="none" stroke="${c.woodD}" stroke-width="7" stroke-linecap="round"/>
+    <path d="M-22 2Q-24 -44 -14 -58H14Q24 -44 22 2Z" fill="${sh(c.yellow,-.2)}"/><path d="M-22 2Q-24 -44 -14 -58H4Q-6 -40 -6 2Z" fill="${c.yellow}"/>
+    <rect x="-26" y="-4" width="52" height="8" rx="4" fill="${c.woodD}"/>
+    <path d="M12 -44L32 -58" stroke="#F2C9A0" stroke-width="8" stroke-linecap="round"/>
+    <circle cy="-86" r="30" fill="#E9B98C"/><circle cx="-4" cy="-90" r="27" fill="#F2C9A0"/>
+    <ellipse cy="-108" rx="34" ry="9" fill="${c.ink}"/><path d="M-22 -110Q0 -140 22 -110Z" fill="${c.ink}"/>
+    <circle cx="-10" cy="-86" r="4" fill="${c.ink}"/><circle cx="10" cy="-86" r="4" fill="${c.ink}"/><circle cx="-8" cy="-88" r="1.3" fill="#fff"/><circle cx="12" cy="-88" r="1.3" fill="#fff"/>
+    <path d="M-6 -70Q0 -66 6 -70" fill="none" stroke="${c.ink}" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="-18" cy="-76" r="5" fill="${c.red}" opacity=".25"/><circle cx="18" cy="-76" r="5" fill="${c.red}" opacity=".25"/></g>`;
+  // council head toy in the front corner with a huge stamp
+  s+=`<g transform="translate(284 214)"><ellipse cy="2" rx="22" ry="6" fill="#0003"/>
+    <path d="M-16 0Q-18 -30 -10 -38H10Q18 -30 16 0Z" fill="${c.ink}"/><path d="M-3 -38L0 -20 3 -38" fill="${c.red}"/>
+    <circle cy="-56" r="20" fill="#F2C9A0"/><path d="M-20 -60Q-18 -80 0 -78Q18 -80 20 -60Q10 -70 0 -68Q-10 -70 -20 -60Z" fill="#8a6b4a"/>
+    <circle cx="-7" cy="-56" r="3" fill="${c.ink}"/><circle cx="7" cy="-56" r="3" fill="${c.ink}"/><path d="M-6 -46H6" stroke="${c.ink}" stroke-width="2.4" stroke-linecap="round"/>
+    <g transform="translate(-36 -30) rotate(-14)"><rect x="-6" y="-34" width="12" height="22" rx="5" fill="${c.woodD}"/><rect x="-20" y="-14" width="40" height="12" rx="3" fill="${c.red}"/><rect x="-22" y="-3" width="44" height="6" rx="2" fill="${sh(c.red,-.3)}"/></g></g>`;
+  return `<svg viewBox="0 0 340 220" width="100%" style="display:block">${s}</svg>`}
+
+/* ================= Direction C: planning bureau (blueprint) ================= */
+const NAVY='#10243B';
+function tokenC(x,y,n,state,o={}){const c=TH.C,r=o.r||27,col=c[COL[state]];let s='';
+  if(o.reserve) s+=`<circle r="${r+6}" fill="none" stroke="${col}" stroke-width="2.4"/>`;
+  else for(const a of [0,90,180,270]) s+=`<path d="M0 ${-r-3}V${-r-10}" transform="rotate(${a})" stroke="${c.ink}" stroke-width="2.2"/>`;
+  s+=`<circle r="${r}" fill="${col}" stroke="${c.ink}" stroke-width="2.4"/>
+      <text y="8" text-anchor="middle" font-family="${c.font}" font-weight="700" font-size="22" fill="${NAVY}">${n}</text>`;
+  if(state==='bad') s+=badge('B',r*.74,-r*.74);
+  if(o.label) s+=`<text y="${r+22}" text-anchor="middle" font-family="${c.font}" font-weight="700" font-size="12" letter-spacing="1" fill="${c.ink}" paint-order="stroke" stroke="${c.bg}" stroke-width="4">${o.label}</text>`;
+  return `<g transform="translate(${x} ${y})">${s}</g>`}
+function targetC(x,y,have,need,o={}){const c=TH.C,r=o.r||24;let s='';const frac=Math.max(0,Math.min(1,have/need));
+  s+=`<circle r="${r}" fill="${c.bg}" stroke="${c.ink}" stroke-width="2" stroke-dasharray="4 4"/>`;
+  if(have>0){const a=frac*2*Math.PI-Math.PI/2,lg=frac>.5?1:0,q=r-5;
+    s+= frac>=1?`<circle r="${q}" fill="${c.green}"/>`:`<path d="M0 0L0 ${-q}A${q} ${q} 0 ${lg} 1 ${q*Math.cos(a)} ${q*Math.sin(a)}Z" fill="${c.yellow}"/>`;}
+  s+=`<text y="7" text-anchor="middle" font-family="${c.font}" font-weight="700" font-size="18" fill="${have>0?NAVY:c.ink}" paint-order="stroke" stroke="${have>0&&frac<1?c.yellow:'none'}" stroke-width="3">${have}</text>`;
+  if(frac<1) s+=shield('C',r*.8,-r*.8);
+  return `<g transform="translate(${x} ${y})">${s}</g>`}
+// top-down plot drawings; same dashed plot outline at every stage, anchor mark at bottom centre
+function settlementC(stage,x,y,s=1){const c=TH.C;let g='';
+  const b=(bx,by,w,h,col)=>`<rect x="${bx}" y="${by}" width="${w}" height="${h}" fill="${col}" stroke="${c.ink}" stroke-width="1.4"/><path d="M${bx} ${by+h/2}H${bx+w}" stroke="${NAVY}" stroke-width="1" opacity=".5"/>`;
+  g+=`<rect x="-33" y="-36" width="66" height="38" rx="3" fill="${c.bg}" fill-opacity=".75" stroke="${c.ink}" stroke-width="1.4" stroke-dasharray="3 3"/>
+      <path d="M-4 6L0 1 4 6Z" fill="${c.ink}"/>`;
+  const W='#EAF2F7',Y=c.yellow,K='#FF8A7A',G='#8FA9C4';
+  if(stage===1){ g+=`<rect x="-27" y="-30" width="24" height="24" fill="none" stroke="${c.ink}" stroke-width="1.3" stroke-dasharray="5 2 1 2"/>`+
+     [[-20,-22],[-12,-16],[-18,-12]].map(([a,d])=>`<circle cx="${a}" cy="${d}" r="2.4" fill="#fff"/>`).join('')+b(3,-27,18,12,G)+
+     `<circle cx="22" cy="-8" r="5" fill="none" stroke="${c.green}" stroke-width="2"/><circle cx="22" cy="-8" r="1.5" fill="${c.green}"/>`;}
+  if(stage===2){ g+=`<path d="M-30 -15H30" stroke="${c.ink}" stroke-width="2" opacity=".5"/>`+b(-24,-30,14,12,W)+b(-4,-31,16,13,Y)+b(16,-28,12,11,K)+b(-14,-11,14,9,W)+
+     `<circle cx="22" cy="-6" r="1.8" fill="#fff"/><circle cx="-26" cy="-6" r="4.5" fill="none" stroke="${c.green}" stroke-width="2"/>`;}
+  if(stage===3){ g+=`<path d="M-31 -16H31M2 -34V0" stroke="${c.ink}" stroke-width="2" opacity=".5"/>`+
+     b(-28,-32,12,10,W)+b(-13,-32,12,10,K)+b(6,-33,11,11,Y)+b(20,-32,10,10,W)+b(-28,-12,12,10,Y)+b(-13,-12,12,10,W)+b(6,-12,11,10,K)+
+     `<circle cx="25" cy="-7" r="5" fill="${c.sea}" stroke="${c.ink}" stroke-width="1.4"/><circle cx="25" cy="-7" r="1.4" fill="${c.ink}"/>`;}
+  return `<g transform="translate(${x} ${y}) scale(${s})">${g}</g>`}
+function mapC(opt){const c=TH.C;let s=`<defs>
+   <pattern id="gC" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0V20H0" fill="none" stroke="${c.ink}" stroke-opacity=".07"/></pattern>
+   <pattern id="GC" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0V100H0" fill="none" stroke="${c.ink}" stroke-opacity=".15"/></pattern>
+   <pattern id="hC" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V8" stroke="${c.ink}" stroke-opacity=".16" stroke-width="1.2"/></pattern>
+   <pattern id="pC" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r=".9" fill="${c.ink}" opacity=".2"/><circle cx="9" cy="8" r=".7" fill="${c.ink}" opacity=".14"/></pattern>
+   <clipPath id="wbC"><path d="${WB}"/></clipPath></defs>
+   <rect width="420" height="760" fill="${c.bg}"/><rect width="420" height="760" fill="url(#gC)"/><rect width="420" height="760" fill="url(#GC)"/>
+   <path d="${SEA}" fill="${c.sea}"/><path d="${SEA}" fill="url(#hC)"/><path d="${SEA}" fill="none" stroke="${c.ink}" stroke-width="1.5"/>`;
+  for(const p of [WB,GZ]) s+=`<path d="${p}" fill="${c.land}" stroke="${c.ink}" stroke-width="1.6"/><path d="${p}" fill="url(#pC)"/>`;
+  s+=`<g clip-path="url(#wbC)" fill="none" stroke="${c.ink}" stroke-opacity=".13" stroke-width="1.2">${[0,1,2,3,4].map(i=>`<path d="M${180+i*18} 70Q${300+i*8} ${180+i*20} ${210+i*22} 460"/>`).join('')}</g>`;
+  s+=`<path d="${FENCE}" fill="none" stroke="${c.ink}" stroke-width="3" stroke-dasharray="16 5 2 5" stroke-linejoin="round"/>`;
+  s+=`<text x="296" y="128" font-family="${c.font}" font-weight="700" font-size="17" letter-spacing="3" fill="${c.ink}" opacity=".5">יו״ש</text><text x="96" y="690" font-family="${c.font}" font-weight="700" font-size="17" letter-spacing="3" fill="${c.ink}" opacity=".5">עזה</text>`;
+  // north arrow + scale bar (no text)
+  s+=`<g transform="translate(392 470)" stroke="${c.ink}" stroke-width="1.5" fill="none"><circle r="14" stroke-opacity=".5"/><path d="M0 -20L6 6 0 2 -6 6Z" fill="${c.ink}"/></g>
+      <g transform="translate(230 34)" stroke="${c.ink}" stroke-width="1.5"><path d="M0 0H90M0 -5V5M30 -3V3M60 -3V3M90 -5V5"/><rect x="0" y="-2" width="30" height="4" fill="${c.ink}"/><rect x="60" y="-2" width="30" height="4" fill="${c.ink}"/></g>`;
+  for(const [tx,ty] of THREATS) s+=`<circle cx="${tx}" cy="${ty}" r="3.2" fill="${c.red}" opacity=".85"><animate attributeName="cx" values="${tx};${tx+3};${tx}" dur="3.5s" repeatCount="indefinite"/></circle>`;
+  s+=settlementC(3,296,196,.9)+targetC(334,214,10,15)+settlementC(2,296,376,.9)+targetC(334,392,10,10)+settlementC(1,298,280,.85)+targetC(334,292,0,10);
+  if(opt.drag){const d='M305 578C360 480 360 380 334 300';
+    s+=`<path d="${d}" fill="none" stroke="${c.yellow}" stroke-width="2.4" stroke-dasharray="7 5"/>`;
+    for(let i=0;i<5;i++) s+=`<circle r="4.5" fill="${c.green}" stroke="${c.ink}" stroke-width="1.6"><animateMotion dur="2.4s" begin="${i*.35}s" repeatCount="indefinite" path="${d}"/></circle>`;}
+  s+=tokenC(200,135,20,'mid')+tokenC(173,267,30,'ok')+tokenC(198,396,20,'mid')+tokenC(115,487,30,'ok')+tokenC(182,594,30,'ok')+tokenC(66,598,10,'bad')+tokenC(305,587,35,'ok',{reserve:1,label:'מילואים'});
+  if(opt.drag) s+=hand('B',305,587);
+  return `<svg width="390" height="760" viewBox="0 0 420 760" preserveAspectRatio="xMidYMid slice">${s}</svg>`}
+// technical sheet: left = elevation of the shepherd, right = site plan with a huge security perimeter around one tiny house
+function cardArtC(){const c=TH.C,L=c.ink;
+  const arrow=(x,y1,y2)=>`<path d="M${x} ${y1}V${y2}M${x-4} ${y1+7}L${x} ${y1}L${x+4} ${y1+7}M${x-4} ${y2-7}L${x} ${y2}L${x+4} ${y2-7}M${x-8} ${y1}H${x+8}M${x-8} ${y2}H${x+8}"/>`;
+  const sheepC=(x,y)=>`<g transform="translate(${x} ${y})"><path d="M-10 -2Q-12 -9 -5 -10Q-2 -15 3 -11Q10 -12 10 -5Q12 1 4 1H-7Q-12 1 -10 -2Z"/><ellipse cx="12" cy="-7" rx="4" ry="3.2"/><path d="M-6 1V7M4 1V7"/></g>`;
+  let s=`<defs><pattern id="gK" width="17" height="17" patternUnits="userSpaceOnUse"><path d="M17 0V17H0" fill="none" stroke="${L}" stroke-opacity=".08"/></pattern></defs>
+   <rect width="340" height="220" fill="${c.bg}"/><rect width="340" height="220" fill="url(#gK)"/>
+   <rect x="6" y="6" width="328" height="208" fill="none" stroke="${L}" stroke-width="1.5"/><path d="M200 6V214" stroke="${L}" stroke-width="1"/>
+   <g fill="none" stroke="${L}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 192H194"/>
+    <circle cx="70" cy="104" r="13"/><path d="M54 94H86M60 94Q62 80 70 80Q78 80 80 94"/>
+    <path d="M58 118L50 192M82 118L90 192M58 118H82M64 150H76"/><path d="M80 126L112 116"/>
+    <path d="M116 192V38Q116 22 130 24Q142 26 138 40"/>
+    ${sheepC(150,188)}${sheepC(176,184)}
+   </g>
+   <g fill="none" stroke="${c.yellow}" stroke-width="1.4">${arrow(160,24,192)}${arrow(30,80,192)}</g>
+   <g fill="none" stroke="${L}" stroke-width="1.5">
+    ${[[56,44],[42,32],[29,21],[16,11]].map(([rx,ry],i)=>`<ellipse cx="268" cy="104" rx="${rx}" ry="${ry}" transform="rotate(${-8+i*5} 268 104)" stroke-opacity="${.45+i*.15}"/>`).join('')}
+   </g>
+   <rect x="263" y="100" width="10" height="7" fill="${L}"/>
+   <circle cx="268" cy="104" r="70" fill="none" stroke="${c.red}" stroke-width="2.6" stroke-dasharray="9 5"/>
+   <path d="M232 190L256 116" stroke="${c.red}" stroke-width="1.5"/><circle cx="256" cy="116" r="2.5" fill="${c.red}"/>
+   <g fill="none" stroke="${L}" stroke-width="1.2"><rect x="244" y="186" width="84" height="22"/><path d="M244 197H328M290 186V208"/></g>`;
+  return `<svg viewBox="0 0 340 220" width="100%" style="display:block">${s}</svg>`}
+
+/* ---------- screens ---------- */
+function phoneMap(k){return `<figure class="shot"><div class="phone" style="background:${TH[k].bg}">
+  <div class="maplayer" style="top:84px">${mapSVG(k,{drag:1})}</div>${hud(k)}
+  <div class="reset">${icoReset(TH[k])}</div><div class="hint">גררו מילואים לחווה החדשה</div></div>
+  <figcaption>1 · מפה בזמן גרירה (חווה חדשה חסרה בכוח)</figcaption></figure>`}
+function phoneCard(k){return `<figure class="shot"><div class="phone" style="background:${TH[k].bg}">
+  <div class="maplayer" style="top:84px">${mapSVG(k)}</div><div class="dim"></div>${hud(k,1)}
+  <div class="card"><div class="art">${{A:cardArtA,B:cardArtB,C:cardArtC}[k]()}</div>
+   <span class="tag">החלטה</span><h3>רק רועה ועדר</h3>
+   <p>המועצה מבקשת לאשר חווה חדשה. ״נוכחות אזרחית היא הביטחון שלנו. מדובר במשפחה אחת בלבד״.</p>
+   <div class="choices"><button class="yes">אישור</button><button class="no">סירוב</button></div></div></div>
+  <figcaption>2 · קלף החלטה (השעון עצור)</figcaption></figure>`}
+function cellSVG(inner,w=104,h=86,vb='-52 -48 104 86'){return `<svg width="${w}" height="${h}" viewBox="${vb}">${inner}</svg>`}
+function phoneSheet(k){const c=TH[k];
+  const cells=[
+    [token(k,0,-6,30,'ok'),'כוח מלא'],[token(k,0,-6,20,'mid'),'בינוני'],[token(k,0,-6,10,'bad'),'מסוכן'],
+    [token(k,0,-10,40,'ok',{reserve:1}),'מילואים'],[target(k,0,-6,0,10),'יעד ריק'],[target(k,0,-6,10,15),'יעד חלקי'],
+  ].map(([s,l])=>`<div class="cell">${cellSVG(s)}${l}</div>`).join('');
+  const farms=[1,2,3].map((st,i)=>`<div class="cell">${cellSVG(settlement(k,st,0,12,1.3),112,96,'-56 -66 112 96')}${['חווה','כפר','יישוב'][i]}</div>`).join('');
+  const small=`<div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-top:4px">
+    ${[64,48,32].map(px=>`<div class="cell">${cellSVG(settlement(k,1,0,10,1),px,px*.8,'-40 -38 80 64')}${px}px</div>`).join('')}
+    ${[64,48,32].map(px=>`<div class="cell">${cellSVG(settlement(k,3,0,10,1),px,px*.8,'-40 -38 80 64')}${px}px</div>`).join('')}</div>`;
+  const arrow=(up,col,icon,val)=>`<div class="cell">${icon}<svg width="30" height="56" viewBox="0 0 30 56"><path d="${up?'M15 4L27 20H20V52H10V20H3Z':'M15 52L27 36H20V4H10V36H3Z'}" fill="${col}" ${k!=='B'?`stroke="${k==='C'?'#10243B':c.ink}" stroke-width="2.5" stroke-linejoin="round"`:''}/></svg><b style="font-size:15px">${val}</b></div>`;
+  return `<figure class="shot"><div class="phone"><div class="sheet">
+    <h4>כוחות ויעדי אבטחה</h4><div class="grid">${cells}</div>
+    <h4>חווה ← כפר ← יישוב (אותו עוגן)</h4><div class="grid">${farms}</div>
+    <h4>בדיקה בקטן</h4>${small}
+    <h4>שינוי מדדים</h4><div style="display:flex;justify-content:center;gap:34px">${arrow(0,c.red,icoMoney(c),'−8')}${arrow(0,c.red,icoWorld(c),'−5')}${arrow(1,c.green,icoUnity(c),'+1')}</div>
+  </div></div><figcaption>3 · תקריב: כוחות, יעדים, שלבי גדילה</figcaption></figure>`}
+
+for(const k of ['A','B','C']) document.getElementById('row'+k).innerHTML=phoneMap(k)+phoneCard(k)+phoneSheet(k);
+</script>
+</body>
+</html>

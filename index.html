@@ -1,0 +1,2923 @@
+<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>גבולות — ארבע שנות כהונה</title><style>*{box-sizing:border-box}body{margin:0;background:#e6e5df;font-family:Arial,sans-serif;color:#354537}main{position:relative;max-width:460px;height:100dvh;margin:auto;background:#ece9d5;overflow:hidden}svg.map{width:100%;height:100%;touch-action:none;user-select:none}text{font-family:Arial;pointer-events:none}.number{fill:white;font-size:20px;font-weight:bold}.requirement{font-size:12px;fill:#405044;paint-order:stroke;stroke:#ece9d5;stroke-width:3px}.region{font-size:19px;fill:#839385;font-weight:bold}.alert{fill:#b74236;font-size:27px;font-weight:bold}.incoming{font-size:13px;fill:#315d52}.warning{animation:pulse 1s infinite alternate}@keyframes pulse{to{opacity:.3}}#status{position:absolute;bottom:10px;left:50px;right:50px;text-align:center;font-size:13px;background:#fff9e9dd;border-radius:14px;padding:8px;pointer-events:none}header{position:absolute;top:14px;right:18px;left:18px;display:flex;justify-content:space-between;pointer-events:none}header small{font-size:12px}#reset{position:absolute;left:12px;bottom:16px;border:0;background:#fff9e9;border-radius:50%;width:34px;height:34px;font-size:22px;cursor:pointer}#card{position:absolute;top:50%;left:20px;right:20px;transform:translateY(-50%);background:#fffdf5;border:1px solid #c6c9b8;border-radius:20px;padding:24px;box-shadow:0 8px 30px #37433022}#card[hidden]{display:none}h2{font-size:23px;margin:0 0 16px}p{line-height:1.65;font-size:16px}#okay{display:block;margin:20px auto 0;border:0;background:#dce6cf;border-radius:14px;padding:12px 35px;font-size:18px;cursor:pointer}[data-id]{cursor:grab}@media(prefers-reduced-motion:reduce){.warning{animation:none}}#card{touch-action:none}#okay[hidden],#choices[hidden],#delta[hidden]{display:none}#choices{margin-top:28px;font-size:16px}#choices span{float:left}#choices small{display:block;text-align:center;margin-top:22px;font-size:12px;color:#76816e}#delta{position:absolute;top:50%;left:24px;right:24px;transform:translateY(-50%);background:#fffdf2f5;border-radius:22px;padding:30px;pointer-events:none}#delta{display:flex;justify-content:center;gap:30px}.delta-row{display:flex;flex-direction:column;align-items:center;flex:1}.delta-row+ .delta-row{margin-top:0}.delta-row strong{display:block;font-size:21px;margin-bottom:16px;text-align:center}.delta-track{height:170px;width:44px;background:#dddcca;border-radius:12px;overflow:hidden;position:relative}.delta-fill{position:absolute;bottom:0;width:100%;background:#748b66;transition:height .7s ease;border-radius:12px}
+#end-stats{position:absolute;top:40px;left:12px;right:12px;font-size:12px;text-align:center;background:#fffdf2dd;padding:6px;border-radius:8px}@keyframes dangerPulse{0%,100%{opacity:1}50%{opacity:.48}}@media(prefers-reduced-motion:reduce){[data-id] circle{animation:none!important}}#unit-info{position:absolute;width:210px;white-space:pre-line;background:#fffdf5;border:1px solid #87967b;border-radius:12px;padding:12px;line-height:1.7;font-size:14px;box-shadow:0 5px 20px #25352c33}#unit-info[hidden]{display:none}#choices{display:flex;flex-direction:column;gap:10px}#choices button{padding:13px;font:inherit;border:1px solid #b6c2ae;border-radius:12px;background:#e4ecd9;cursor:pointer}#choices small{margin:0}#trigger{font-size:13px;background:#f3e3c8;padding:8px;border-radius:8px}#response-label[hidden],#trigger[hidden]{display:none}#unit-info{z-index:5}#card{max-height:90dvh;overflow-y:auto}#card.notice{border-radius:3px;background:#fffdf4;border-top:5px double #354537}#card.notice h2{border-bottom:1px solid #354537;padding-bottom:12px}.threshold-track{display:block;position:relative;direction:ltr;background:#ddd;height:10px;margin:22px 4px 8px;border-radius:6px}.threshold-track i{display:block;height:100%;background:#c66b50;border-radius:6px}.threshold-track b{position:absolute;top:-18px;border-left:2px dashed #354537;height:32px;font-size:10px;padding-left:2px;font-weight:normal}</style><main><svg class="map" viewBox="0 0 420 740" aria-label="מפת משחק סכמטית של יו״ש ועזה"><rect width="420" height="740" fill="#eee9d4"/><path d="M0 0H132L112 140 90 280 61 391 0 495Z" fill="#c8e1e3"/><path d="M228 83Q335 91 361 161L364 382Q336 450 220 441L198 397 176 276 198 133Z" fill="#cbd5b5"/><path d="M47 515L81 497 128 615 91 659 34 599Z" fill="#cbd5b5"/><path d="M338 93Q232 72 200 135L173 267 198 396Q246 446 344 421 M48 514L81 497 128 615 91 659" fill="none" stroke="#94a586" stroke-width="4" stroke-linejoin="round"/><text x="285" y="127" class="region">יו״ש</text><text x="50" y="556" class="region">עזה</text><path id="aim" fill="none" stroke="#4b8eaa" stroke-width="8" stroke-linecap="round" opacity=".65" visibility="hidden"/><g id="travel"></g><g id="nodes"></g></svg><header><b>גבולות</b><small id="calendar" aria-label="תאריך במשחק"></small></header><div id="end-stats"></div><div id="status" role="status"></div><button id="reset" aria-label="התחלה מחדש">↻</button><article id="card"><h2 id="title"></h2><p id="body"></p><p id="trigger" hidden></p><div id="choices" hidden><small id="response-label" hidden>ראש הממשלה בתגובה:</small><button id="approve">אישור</button><button id="decline">סירוב</button></div><button id="okay">פסדר</button></article><section id="delta" hidden aria-live="polite"></section><aside id="unit-info" hidden></aside></main><script>// Fictional normalized units for a control prototype; not real deployment data.
+class TransferModel {
+ constructor(nodes){this.nodes=nodes.map(n=>({...n,troops:n.kind==='source'?[{home:n.id,count:n.initial}]:n.home?[{home:n.home,count:n.initial}]:[]}));this.flights=[];this.sequence=0;for(const n of this.nodes.filter(n=>n.home)){const home=this.get(n.home);home.troops[0].count-=n.initial}}
+ get(id){return this.nodes.find(n=>n.id===id)}
+ count(id){return this.get(id).troops.reduce((s,t)=>s+t.count,0)}
+ incoming(id){return this.flights.filter(f=>f.to===id).reduce((s,f)=>s+f.count,0)}
+ total(){return this.nodes.reduce((s,n)=>s+this.count(n.id),0)+this.flights.reduce((s,f)=>s+f.count,0)}
+ send(from,to){
+  const a=this.get(from),b=this.get(to);if(!a||!b||a===b)return null;
+  const available=b.reserveOnly?a.troops.filter(t=>t.home==='reserve').reduce((s,t)=>s+t.count,0):this.count(from);if(available<2)return null;
+  const capacity=b.kind==='target'?b.need:b.initial;
+  const deficit=Math.max(0,capacity-this.count(to)-this.incoming(to));
+  // In-flight reinforcements already cover the shortage; avoid duplicate dispatch.
+  if(this.incoming(to)>0&&deficit===0)return null;
+  const amount=Math.min(Math.floor(available/2),deficit||Math.floor(available/2));
+  let remaining=amount;const troops=[];
+  for(const t of a.troops){if(b.reserveOnly&&t.home!=='reserve')continue;const take=Math.min(remaining,t.count);if(take){t.count-=take;remaining-=take;troops.push({home:t.home,count:take})}if(!remaining)break;}
+  a.troops=a.troops.filter(t=>t.count>0);
+  const f={id:++this.sequence,from,to,troops,count:amount};this.flights.push(f);return f;
+ }
+
+ arrive(id){const f=this.flights.find(f=>f.id===id);if(!f)return false;const b=this.get(f.to);for(const troop of f.troops){const same=b.troops.find(t=>t.home===troop.home);if(same)same.count+=troop.count;else b.troops.push({...troop});}this.flights=this.flights.filter(v=>v!==f);return true}
+}
+
+// Abstract prototype balance, not a model of real-world security.
+class DangerModel {
+ constructor(){this.sites=new Map();this.failed=null;}
+ step(nodes,count,seconds,paused=false){
+  if(paused||this.failed)return this.failed;
+  for(const n of nodes){
+   if(n.reserve)continue;
+   const required=n.kind==='target'?n.need:n.initial*.45/(n.readiness||1);
+   const deficit=Math.max(0,1-count(n.id)/required);
+   const state=this.sites.get(n.id)||{grace:8,pressure:0};
+   if(deficit>0){const active=Math.max(0,seconds-state.grace);state.grace=Math.max(0,state.grace-seconds);state.pressure=Math.min(1,state.pressure+active*deficit/24);}
+   else {state.pressure=Math.max(0,state.pressure-seconds/12);if(state.pressure===0)state.grace=8;}
+   this.sites.set(n.id,state);
+   if(state.pressure>=1){this.failed=n.id;return n.id;}
+  }
+  return null;
+ }
+}
+if(typeof module!=='undefined')module.exports=DangerModel;
+
+const CAMPAIGN=[
+  {
+    "day": 0,
+    "title": "רק רועה ועדר",
+    "body": "המועצה מבקשת לאשר חווה חדשה. ״נוכחות אזרחית היא הביטחון שלנו. מדובר במשפחה אחת בלבד״.",
+    "yes": {
+      "money": -5,
+      "support": -5,
+      "add": [
+        "farm",
+        313,
+        282,
+        10
+      ],
+      "unity": -2
+    },
+    "id": "original-1",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "day": 18,
+    "title": "התוכנית הישנה ממשיכה",
+    "body": "משפחות נוספות הגיעו ליישוב במסגרת תוכנית שאושרה בשנה שעברה. דרישת האבטחה גדלה.",
+    "id": "original-2",
+    "notice": true,
+    "yes": {
+      "money": -5,
+      "grow": [
+        "old1",
+        5
+      ],
+      "unity": 2
+    },
+    "no": {
+      "money": -3,
+      "grow": [
+        "old1",
+        5
+      ],
+      "unity": -2
+    },
+    "answers": [
+      "נקצה כסף לקליטת המשפחות",
+      "האישור ישן, האחריות חדשה"
+    ]
+  },
+  {
+    "day": 38,
+    "title": "שלושה קרוואנים בלבד",
+    "body": "״הכול זמני. רק תאשרו את הנקודה ואת האבטחה, עד אחרי החגים״.",
+    "yes": {
+      "money": -5,
+      "support": -5,
+      "add": [
+        "caravans",
+        340,
+        108,
+        15
+      ],
+      "unity": -2
+    },
+    "id": "original-3",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "day": 56,
+    "title": "רק חשמל ומים",
+    "body": "החווה מבקשת תשתיות.לא יתכן בלי אינטרנט.",
+    "when": "farm",
+    "yes": {
+      "money": -5,
+      "grow": [
+        "farm",
+        10
+      ],
+      "unity": -2
+    },
+    "id": "original-4",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "extra-15",
+    "day": 72,
+    "title": "הקניות התייקרו",
+    "body": "הממשלה העלתה מסים למימון המלחמה ותשתיות ההתיישבות. סל הקניות התייקר. שר האוצר: ״ביטחון מתחיל בבית״.",
+    "when": "spending",
+    "notice": true,
+    "yes": {
+      "money": -6,
+      "unity": 2
+    },
+    "no": {
+      "money": -4,
+      "unity": -2
+    },
+    "answers": [
+      "נסבסד את מוצרי היסוד",
+      "אפשר גם חצי עגלה"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "extra-16",
+    "day": 72,
+    "title": "החשבון בסופר",
+    "body": "מחירי מוצרי היסוד עלו לאחר קיצוץ בתמיכות והפניית הכסף למלחמה ולהתיישבות. השר ממליץ להשוות מחירים.",
+    "when": "spending",
+    "notice": true,
+    "yes": {
+      "money": -6,
+      "unity": 2
+    },
+    "no": {
+      "money": -4,
+      "unity": -2
+    },
+    "answers": [
+      "נממן הנחה בסל הקניות",
+      "שישוו בעוד סופר"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "day": 90,
+    "title": "חוזרים לעזה!",
+    "body": "גרעין התיישבות מבקש להקים נקודה בתוך עזה. ״איפה שיש משפחות, יש ביטחון״. וגם, מגיע להם אחרי ה7.10. ",
+    "yes": {
+      "money": -5,
+      "support": -10,
+      "add": [
+        "gaza",
+        82,
+        543,
+        20
+      ],
+      "unity": -2
+    },
+    "id": "original-6",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "extra-17",
+    "day": 102,
+    "title": "מסלול שירות רוחני",
+    "body": "נציגי המפלגות החרדיות מציעים גדודי תפילה במקום שירות צבאי. נדרש מימון להסעות ולבתי מדרש. כוחות לוחמים לא יתווספו.",
+    "yes": {
+      "money": -6,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "extra-18",
+    "day": 102,
+    "title": "תהילים במשמרות",
+    "body": "הצעת הגיוס: לימוד רצוף סביב השעון. המשרד מבקש מימון להפעלת משמרות. ללא הכשרה צבאית וללא תוספת כוח לוחם.",
+    "yes": {
+      "money": -6,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "extra-19",
+    "day": 102,
+    "title": "כולל חירום",
+    "body": "הצעה להקמת כולל שיתפלל לשלום הכוחות. המימון ממשלתי. המשתתפים לא יוצבו למשימות צבאיות.",
+    "yes": {
+      "money": -5,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "day": 112,
+    "title": "עוד סבב מילואים",
+    "body": "הצבא מבקש לגייס כוח נוסף. יותר מדי גזרות פתוחות.",
+    "yes": {
+      "money": -5,
+      "reserve": 20,
+      "unity": -2
+    },
+    "id": "original-7",
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "migration-launch",
+    "day": 120,
+    "title": "כרטיס בכיוון אחד",
+    "body": "השר מציע לממן קמפיין ״הגירה מרצון״ לתושבי עזה. מדינות היעד טרם הסכימו לקבל איש.",
+    "yes": {
+      "money": -5,
+      "support": -4,
+      "unity": -2,
+      "migration": true
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לממן את הקמפיין",
+      "אין הסכם, אין קמפיין"
+    ]
+  },
+  {
+    "day": 130,
+    "title": "אין צפי לחזרה",
+    "body": "משפחות אנשי המילואים דורשות לוח זמנים. בתגובה נמסר שהנושא נמצא בראש סדר העדיפויות, מיד אחרי יתר הנושאים.",
+    "id": "original-8",
+    "notice": true,
+    "yes": {
+      "money": -5,
+      "unity": 2
+    },
+    "no": {
+      "money": -3,
+      "unity": -2
+    },
+    "answers": [
+      "נרחיב את הסיוע למשפחות",
+      "גם געגוע הוא חוסן"
+    ]
+  },
+  {
+    "day": 148,
+    "title": "החווה שליד החווה",
+    "body": "״כדי לחבר בין הנקודות צריך עוד נקודה״. בקשה חדשה לחווה ולכוח אבטחה קבוע.",
+    "yes": {
+      "money": -5,
+      "support": -6,
+      "add": [
+        "second",
+        255,
+        326,
+        15
+      ],
+      "unity": -2
+    },
+    "id": "original-9",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "extra-20",
+    "day": 158,
+    "title": "הרחפנים נשארו במחסן",
+    "body": "בשל המחסור בכסף בוטלו תיקונים ורכש רחפנים. היחידות ממשיכות לפעול עם ציוד מצומצם. נדרש יותר כוח לאותה אבטחה.",
+    "when": "equipment",
+    "notice": true,
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "נממן פתרון זמני ליחידות",
+      "שיסתכלו קצת למעלה"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "extra-21",
+    "day": 158,
+    "title": "אין חלפים",
+    "body": "הגירעון עצר הזמנות חלפים לרכב הממוגן. חלק מהכלים הושבתו. היחידות נדרשות לפצות בכוח אדם.",
+    "when": "equipment",
+    "notice": true,
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "נפתח קרן תיקונים דחופה",
+      "פעם הסתדרנו ברגל"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "day": 170,
+    "title": "הגיעו עוד משפחות",
+    "body": "היישוב הקיים בדרום המפה מתרחב מכוח אישורים ישנים. נדרש כוח נוסף, גם ללא אישור תוכנית חדשה.",
+    "id": "original-10",
+    "notice": true,
+    "yes": {
+      "money": -7,
+      "grow": [
+        "old2",
+        10
+      ],
+      "unity": 2
+    },
+    "no": {
+      "money": -5,
+      "grow": [
+        "old2",
+        10
+      ],
+      "unity": -2
+    },
+    "answers": [
+      "נעביר מימון לשירותים ביישוב",
+      "הן כבר שם, ברוכות הבאות"
+    ]
+  },
+  {
+    "id": "civilian-offensive",
+    "day": 180,
+    "title": "זה יעודד אותם לעזוב",
+    "body": "שר מציע הפצצה רחבה של אזורים אזרחיים כדי לדחוף תושבים לעזוב. היועצים מזהירים מפגיעה קשה באזרחים.",
+    "yes": {
+      "money": -9,
+      "support": -12,
+      "unity": -5,
+      "offensive": true
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לאשר את ההצעה",
+      "לדחות את ההצעה"
+    ]
+  },
+  {
+    "day": 190,
+    "title": "קמיעות לכל עמדה",
+    "body": "השר מציע לרכוש קמיעות ממוגנים לכל הכוחות. הגנה רוחנית. אין אחריות על נזק פיזי.",
+    "yes": {
+      "money": -6,
+      "unity": -2
+    },
+    "id": "original-11",
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "extra-22",
+    "day": 190,
+    "title": "ברכה לכל גדוד",
+    "body": "השר מציע משלחת רבנים שתברך כל גדוד לפני יציאה. המשלחת בתשלום; מספר הלוחמים נשאר זהה.",
+    "yes": {
+      "money": -5,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "tour-farms",
+    "day": 204,
+    "title": "חווים את החוות",
+    "body": "המועצה מציעה סדרת טיולים מאורגנים בין החוות. נוף, טעימות ונוכחות אזרחית. אנשי מילואים נדרשים לאבטח את מסלול הטיולים לאורך העונה.",
+    "yes": {
+      "money": -5,
+      "add": [
+        "tour",
+        275,
+        477,
+        8
+      ],
+      "reserveOnly": true,
+      "unity": -2
+    },
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "day": 210,
+    "title": "לא מקימים, רק מסדירים",
+    "body": "הקרוואנים מבקשים מעמד של יישוב קבע. ״זו רק חתימה״. לבקשה צורפו תוכניות הרחבה.",
+    "when": "caravans",
+    "yes": {
+      "money": -5,
+      "support": -7,
+      "grow": [
+        "caravans",
+        10
+      ],
+      "unity": -2,
+      "legalize": true
+    },
+    "id": "original-12",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "migration-no-partner",
+    "day": 225,
+    "title": "אין מדינה בקצה המסלול",
+    "body": "המדינות שהוזכרו בקמפיין הודיעו שלא סוכם איתן דבר.",
+    "yes": {
+      "money": -2,
+      "unity": 1
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "נפסיק את הקמפיין",
+      "נחליף את שם היעד"
+    ],
+    "notice": true,
+    "when": "migration",
+    "reason": "קמפיין הגירה מומן ללא הסכם קליטה"
+  },
+  {
+    "day": 232,
+    "title": "שיתופי הפעולה מוקפאים",
+    "body": "אוניברסיטאות בחו״ל הודיעו על הקפאת הסכמים. השר: ״הידע יסתדר בלעדיהם״.",
+    "when": "isolation",
+    "id": "original-13",
+    "notice": true,
+    "yes": {
+      "money": -8,
+      "unity": 2
+    },
+    "no": {
+      "money": -6,
+      "unity": -2
+    },
+    "answers": [
+      "נממן את המחקר שנפגע",
+      "גם ניוטון עבד מהבית"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "extra-23",
+    "day": 232,
+    "title": "מחוץ למגרש",
+    "body": "ההתאחדות הבינלאומית השעתה את ישראל מהתחרות. שר הספורט: ״נארגן טורניר עם מי שמוכן לענות לטלפון״.",
+    "when": "isolation",
+    "notice": true,
+    "yes": {
+      "money": -8,
+      "unity": 2
+    },
+    "no": {
+      "money": -6,
+      "unity": -2
+    },
+    "answers": [
+      "נסייע לספורטאים שנפגעו",
+      "נכריז שניצחנו טכנית"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "extra-24",
+    "day": 232,
+    "title": "השנה לא שרים",
+    "body": "ישראל לא תשתתף באירוויזיון. שר התרבות: ״נעשה אחד משלנו. לא צריך טובות״.",
+    "when": "isolation",
+    "notice": true,
+    "yes": {
+      "money": -7,
+      "unity": 2
+    },
+    "no": {
+      "money": -5,
+      "unity": -2
+    },
+    "answers": [
+      "נממן במה לאמנים בארץ",
+      "ניתן לעצמנו דוז פואה"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "extra-25",
+    "day": 232,
+    "title": "מעבדות בלי שותפים",
+    "body": "מענקי מחקר משותפים הוקפאו בעקבות המשבר המדיני. המשרד הודיע שיבחן את הנושא בוועדה מקומית.",
+    "when": "isolation",
+    "notice": true,
+    "yes": {
+      "money": -8,
+      "unity": 2
+    },
+    "no": {
+      "money": -6,
+      "unity": -2
+    },
+    "answers": [
+      "נממן את המעבדות בינתיים",
+      "שותפים רק מפריעים לריכוז"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "offensive-backlash",
+    "day": 245,
+    "title": "העולם דורש תשובות",
+    "body": "בעקבות הפגיעה באזרחים דורשות מדינות חקירה והקפאת הפעולה.",
+    "yes": {
+      "money": -3,
+      "support": 1,
+      "unity": -1
+    },
+    "no": {
+      "support": -5,
+      "unity": -2
+    },
+    "answers": [
+      "נפתח בחקירה",
+      "נגנה את הגינוי"
+    ],
+    "notice": true,
+    "when": "offensive",
+    "reason": "אושרה פעולה הפוגעת באוכלוסייה אזרחית"
+  },
+  {
+    "day": 250,
+    "title": "שכונה מעבר לגבעה",
+    "body": "המועצה מבקשת שלוחה חדשה. ״זה אותו יישוב״. במפה נדרשת עמדת אבטחה נוספת.",
+    "yes": {
+      "money": -5,
+      "support": -7,
+      "add": [
+        "extension",
+        346,
+        441,
+        20
+      ],
+      "unity": -2
+    },
+    "id": "original-14",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "extra-26",
+    "day": 262,
+    "title": "תוספת ביטחון לשכר הדירה",
+    "body": "כספי בנייה ציבורית הופנו למלחמה ולהתיישבות. פרויקטים הוקפאו ושכר הדירה ממשיך לעלות.",
+    "when": "spending",
+    "notice": true,
+    "yes": {
+      "money": -6,
+      "unity": 2
+    },
+    "no": {
+      "money": -4,
+      "unity": -2
+    },
+    "answers": [
+      "נרחיב את הסיוע בשכר דירה",
+      "שיעברו לגור אצל ההורים"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "extra-27",
+    "day": 262,
+    "title": "כיתה צפופה, עמדה חדשה",
+    "body": "תקציבי כיתות לימוד קוצצו לטובת הוצאות המלחמה ואבטחת ההתיישבות. פתיחת שנת הלימודים תלווה בהסברה.",
+    "when": "spending",
+    "notice": true,
+    "yes": {
+      "money": -6,
+      "unity": 2
+    },
+    "no": {
+      "money": -4,
+      "unity": -2
+    },
+    "answers": [
+      "נממן כיתות זמניות",
+      "צפיפות היא אחדות"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "day": 275,
+    "title": "ממשפחה לשכונה",
+    "body": "נקודת ההתיישבות ברצועה מבקשת לקלוט משפחות נוספות. גם האבטחה צריכה לגדול.",
+    "when": "gaza",
+    "yes": {
+      "money": -5,
+      "support": -5,
+      "grow": [
+        "gaza",
+        10
+      ],
+      "unity": -2
+    },
+    "id": "original-15",
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "gaza-expansion",
+    "day": 275,
+    "title": "חוזרים לעזה!",
+    "body": "קמפיין חדש מזמין עוד משפחות לנקודה ברצועה. ״הקיץ עוברים לבית משלנו״. הבקשה כוללת הרחבה ותוספת אבטחה.",
+    "when": "gaza",
+    "yes": {
+      "money": -5,
+      "support": -5,
+      "grow": [
+        "gaza",
+        10
+      ],
+      "unity": -2
+    },
+    "no": {
+      "money": 1,
+      "support": 1,
+      "unity": -1
+    },
+    "build": true
+  },
+  {
+    "id": "farm-growth-news",
+    "day": 286,
+    "title": "החווה הפכה לשכונה",
+    "body": "בחווה נוספו מבני מגורים מכוח אישור קודם. המשפחות כבר הגיעו. דרישת האבטחה גדלה.",
+    "when": "farm",
+    "notice": true,
+    "yes": {
+      "money": -6,
+      "grow": [
+        "farm",
+        5
+      ],
+      "unity": 2
+    },
+    "no": {
+      "money": -4,
+      "grow": [
+        "farm",
+        5
+      ],
+      "unity": -2
+    },
+    "answers": [
+      "נקצה כסף לקליטת השכונה",
+      "זו עדיין חווה, עם שכנים"
+    ]
+  },
+  {
+    "id": "extra-28",
+    "day": 298,
+    "title": "עוד משלוח בוטל",
+    "body": "ספקים בחו״ל ביטלו עסקאות בעקבות הבידוד המדיני. חלופות מקומיות יקרות יותר.",
+    "when": "isolation",
+    "notice": true,
+    "yes": {
+      "money": -10,
+      "unity": 2
+    },
+    "no": {
+      "money": -8,
+      "unity": -2
+    },
+    "answers": [
+      "נסייע במימון ספק חלופי",
+      "מי צריך משלוחים בכלל"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "extra-29",
+    "day": 298,
+    "title": "הביטוח לא מכסה",
+    "body": "חברות ביטוח בינלאומיות צמצמו כיסוי לעסקאות עם ישראל. היבוא מתייקר. הממשלה מבקשת מהציבור לגלות חוסן.",
+    "when": "isolation",
+    "notice": true,
+    "yes": {
+      "money": -10,
+      "unity": 2
+    },
+    "no": {
+      "money": -8,
+      "unity": -2
+    },
+    "answers": [
+      "נממן רשת ביטחון ליבואנים",
+      "האמונה היא הביטוח שלנו"
+    ],
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "extra-30",
+    "day": 318,
+    "title": "הציוד נשחק",
+    "body": "המחסור הכספי נמשך. פחות רחפנים וכלים ממוגנים זמינים ליחידות. גם כוח מלא מתקשה לכסות את המשימות.",
+    "when": "equipment",
+    "notice": true,
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "נממן תחזוקת חירום",
+      "לציוד ותיק יש ניסיון"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "extra-31",
+    "day": 318,
+    "title": "רכש בהמתנה",
+    "body": "הזמנות הציוד נעצרו בגלל הגירעון. הכוחות נשארים בעמדות, הציוד החדש נשאר במצגת.",
+    "when": "equipment",
+    "notice": true,
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "שפרו את המצגות",
+      "נילחם גם בצהריים"
+    ],
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "day": 340,
+    "title": "עוד תגבור לפני החורף",
+    "body": "בקשה נוספת לגיוס מילואים. תכלס הרבה אומרים שעדיף במילואים מאשר בבית. ניתן להם מה שהם רוצים?",
+    "yes": {
+      "money": -5,
+      "reserve": 20,
+      "unity": -2
+    },
+    "id": "original-18",
+    "no": {
+      "money": 0,
+      "unity": 1
+    }
+  },
+  {
+    "id": "year1-budget",
+    "day": 370,
+    "title": "סדר עדיפויות חדש",
+    "body": "אפשר להפנות כסף לשירותים אזרחיים, או לצמצם הוצאות ולהשאיר כסף להתחייבויות הביטחון.",
+    "yes": {
+      "money": -3,
+      "unity": 8
+    },
+    "no": {
+      "money": 5,
+      "unity": -4
+    },
+    "answers": [
+      "לחזק שירותים אזרחיים",
+      "להגדיל את הרזרבה"
+    ]
+  },
+  {
+    "id": "year1-farm",
+    "day": 390,
+    "title": "עוד חווה על הדרך",
+    "body": "המועצה מבקשת נקודת התיישבות נוספת. כל משפחה מביאה נוכחות. כל נוכחות מביאה משימת אבטחה.",
+    "yes": {
+      "money": -6,
+      "support": -5,
+      "unity": 1,
+      "add": [
+        "new-1",
+        345,
+        335,
+        14
+      ]
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "אישור",
+      "סירוב"
+    ],
+    "build": true
+  },
+  {
+    "id": "year1-inertia",
+    "day": 407,
+    "title": "האישורים עדיין בתוקף",
+    "body": "משפחות מצטרפות ליישוב הקיים מכוח תוכנית ישנה. נדרשת אבטחה נוספת גם בלי החלטת בנייה חדשה.",
+    "yes": {
+      "money": -3,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": 1
+    },
+    "no": {
+      "money": -1,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": -1
+    },
+    "answers": [
+      "נקצה שירותי קליטה",
+      "נזכיר מי אישר"
+    ],
+    "notice": true
+  },
+  {
+    "id": "year1-news-50-0",
+    "day": 415,
+    "title": "הטיסה נגמרה בחקירה",
+    "body": "איש מילואים עוכב לחקירה בחו״ל בעקבות פעולות שאושרו בממשלה.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן ייעוץ משפטי",
+      "נמליץ לנפוש בארץ"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "year1-news-50-1",
+    "day": 415,
+    "title": "אין כרטיס לתחרות",
+    "body": "ישראל הושעתה ממפעל ספורט בינלאומי. השר מבטיח ליגה בינלאומית מקומית.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לספורטאים",
+      "נזמין את עצמנו לגמר"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "year1-extension",
+    "day": 430,
+    "title": "השלוחה הזמנית",
+    "body": "החווה מבקשת לקלוט משפחות נוספות. מספר המבנים גדל וגם הכוח שיידרש להגן עליהם.",
+    "yes": {
+      "money": -5,
+      "support": -3,
+      "unity": 1,
+      "grow": [
+        "new-1",
+        7
+      ]
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לאשר את ההרחבה",
+      "לעצור כאן"
+    ],
+    "when": "new-1",
+    "build": true
+  },
+  {
+    "id": "year1-reserve",
+    "day": 445,
+    "title": "המשמרת לא נגמרת",
+    "body": "המפקדים מבקשים עתודת מילואים נוספת. הגיוס ייתן מרווח בפריסה ויעלה כסף.",
+    "yes": {
+      "money": -7,
+      "unity": -2,
+      "reserve": 12
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לגייס עתודה",
+      "להסתדר עם הקיים"
+    ]
+  },
+  {
+    "id": "year1-gaza",
+    "day": 465,
+    "title": "חוזרים לעזה, שוב",
+    "body": "תנועת ההתיישבות מבקשת להוסיף משפחות ברצועה. הבקשה כוללת אבטחה קבועה.",
+    "yes": {
+      "money": -7,
+      "support": -7,
+      "unity": 1,
+      "settleGaza": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לאשר התיישבות",
+      "לא להרחיב"
+    ],
+    "build": true
+  },
+  {
+    "id": "cooperation-465",
+    "day": 465,
+    "title": "מסחר בלי קיצורי דרך",
+    "body": "הצוותים מציעים להרחיב מסחר מפוקח. הבדיקות נשארות, והביקורת בקואליציה גוברת.",
+    "answers": [
+      "להרחיב בזהירות",
+      "להקפיא את ההרחבה"
+    ],
+    "yes": {
+      "money": 5,
+      "unity": -3,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 2
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year1-legalize",
+    "day": 485,
+    "title": "בתים במקום קרוואנים",
+    "body": "המועצה מבקשת להסדיר עוד מתחם ולהפוך מבנים זמניים לקבע. לחתימה מצורפת הרחבה.",
+    "yes": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old1",
+        5
+      ],
+      "legalize": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "להסדיר ולהרחיב",
+      "לדחות את ההסדרה"
+    ],
+    "build": true
+  },
+  {
+    "id": "year1-embargo",
+    "day": 501,
+    "title": "משלוחי הנשק נעצרו",
+    "body": "לאחר הכשרת שלושה מתחמים מוקפאים רכיבי ציוד מחו״ל. החלופה המקומית יקרה.",
+    "yes": {
+      "money": -6,
+      "repair": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לממן חלופה מקומית",
+      "לדחות את הרכש"
+    ],
+    "when": "embargo",
+    "notice": true,
+    "reason": "הוכשרו לפחות שלושה מתחמים"
+  },
+  {
+    "id": "year1-news-145-0",
+    "day": 510,
+    "title": "הארנונה התגייסה",
+    "body": "הרשויות מעלות תשלומים אחרי קיצוץ בשירותים. התושבים כבר משתתפים במאמץ.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לרשויות",
+      "נשלח מכתב הערכה"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year1-news-145-1",
+    "day": 510,
+    "title": "פחות קווים, יותר המתנה",
+    "body": "סבסוד התחבורה קוצץ כדי לממן התחייבויות ביטחוניות. האוטובוס יגיע כשיגיע.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נשקם את הקווים",
+      "הליכה מחזקת חוסן"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year1-escort",
+    "day": 520,
+    "title": "הילדים צריכים הסעה",
+    "body": "מערך ההסעות ליישובים מבקש אבטחה נוספת. אפשר להרחיבו או לצמצם נסיעות.",
+    "yes": {
+      "money": -4,
+      "grow": [
+        "old1",
+        4
+      ],
+      "unity": 1
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "להרחיב ליווי",
+      "לצמצם נסיעות"
+    ],
+    "when": "expansion",
+    "build": true
+  },
+  {
+    "id": "year1-illegal",
+    "day": 540,
+    "title": "התחנה כבר מאוכלסת",
+    "body": "קבוצה התמקמה בנקודה ללא אישור. אפשר לפנות אותה או להסדיר נוכחות ואבטחה ביישוב הסמוך.",
+    "yes": {
+      "money": -3,
+      "unity": -3
+    },
+    "no": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old2",
+        5
+      ],
+      "legalize": true
+    },
+    "answers": [
+      "לפנות את הנקודה",
+      "להסדיר ולאבטח"
+    ],
+    "build": true
+  },
+  {
+    "id": "year1-readiness",
+    "day": 560,
+    "title": "זמן לתחזוקה",
+    "body": "המפקדים מבקשים חלון לתחזוקה וריענון. השיפור הדרגתי וממוקד ביחידות השחוקות.",
+    "yes": {
+      "money": -5,
+      "repair": true,
+      "unity": 2
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן ריענון",
+      "לדחות שוב"
+    ]
+  },
+  {
+    "id": "year1-migration-news",
+    "day": 573,
+    "title": "שלוש מאות בכותרת",
+    "body": "המשרד מדווח על הצלחת תוכנית ההגירה. בדו״ח המצורף אין הסכם קליטה קבוע.",
+    "yes": {
+      "money": -2,
+      "unity": 1
+    },
+    "no": {
+      "support": -2,
+      "unity": -2
+    },
+    "answers": [
+      "לבדוק את הנתונים",
+      "לחגוג את הכותרת"
+    ],
+    "when": "migration",
+    "notice": true,
+    "reason": "תוכנית ההגירה קודמה"
+  },
+  {
+    "id": "year1-revenue",
+    "day": 583,
+    "title": "תוכנית חילוץ אזרחית",
+    "body": "האוצר מציע הסדרי אשראי והקלה על עסקים שנפגעו מהשירות הממושך. אפשר להתקדם או להעדיף גבייה מיידית.",
+    "yes": {
+      "money": 6,
+      "unity": 3
+    },
+    "no": {
+      "money": 10,
+      "unity": -5
+    },
+    "answers": [
+      "להפעיל את ההסדר",
+      "להעלות גבייה"
+    ]
+  },
+  {
+    "id": "cooperation-590",
+    "day": 590,
+    "title": "לא כל תקרית סוגרת דלת",
+    "body": "אחרי עימות מקומי דורשים שרים לפרק את צוות הקשר. אפשר להתעקש על תחקיר משותף.",
+    "answers": [
+      "להמשיך ולחקור",
+      "להקפיא את צוות הקשר"
+    ],
+    "yes": {
+      "money": -2,
+      "unity": -3,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 2,
+      "cooperation": -1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year1-news-230-0",
+    "day": 595,
+    "title": "הרופאים אורזים",
+    "body": "מחלקות בבתי החולים מדווחות על עזיבת אנשי צוות. התורים מתארכים.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תוכנית שימור",
+      "נבקש עוד סבלנות"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year1-news-230-1",
+    "day": 595,
+    "title": "מעבדה מחפשת מדינה",
+    "body": "חוקרים ויזמים מעבירים פעילות לחו״ל בעקבות המשבר החברתי.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נפתח מסלול חזרה",
+      "הם עוד יתגעגעו"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year1-prayer",
+    "day": 605,
+    "title": "מוקד תפילה ארצי",
+    "body": "הנציגים מציעים שירות רוחני במימון המדינה. המשתתפים לא מוסיפים כוח לוחם.",
+    "yes": {
+      "money": -4,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן שירות רוחני",
+      "לבקש שירות מעשי"
+    ]
+  },
+  {
+    "id": "year1-unity",
+    "day": 625,
+    "title": "משפחות על הקו",
+    "body": "נציגי משפחות מילואים, רשויות וארגוני חברה מבקשים הסכמות על נטל השירות ועל השירותים האזרחיים.",
+    "yes": {
+      "money": -3,
+      "unity": 7
+    },
+    "no": {
+      "unity": -4
+    },
+    "answers": [
+      "לכנס את הנציגים",
+      "להסתפק בהצהרה"
+    ]
+  },
+  {
+    "id": "year1-gaza-withdraw",
+    "day": 647,
+    "title": "לבחון יציאה מהיישוב",
+    "body": "גורמי המקצוע מציעים פינוי מוסכם של היישובים ברצועה והשבת כוח האבטחה למקורותיו. נדרש מימון והמהלך מעורר התנגדות.",
+    "yes": {
+      "money": -5,
+      "unity": -5,
+      "withdraw": "gaza"
+    },
+    "no": {
+      "money": -2
+    },
+    "answers": [
+      "לפנות ולהשיב כוחות",
+      "להשאיר את היישובים"
+    ],
+    "when": "gaza"
+  },
+  {
+    "id": "year1-freeze",
+    "day": 667,
+    "title": "אפשר לעצור התרחבות",
+    "body": "מוצע פינוי מוסכם של נקודת ההתיישבות החדשה האחרונה ביו״ש. התחייבויות אחרות נשארות בתוקף.",
+    "yes": {
+      "money": -3,
+      "unity": -3,
+      "withdraw": "newest"
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לפנות בהסכמה",
+      "להשאיר ולאבטח"
+    ],
+    "when": "new-wb"
+  },
+  {
+    "id": "year1-news-320-0",
+    "day": 685,
+    "title": "המוסך מחכה לתקציב",
+    "body": "כלים ממתינים לתיקון. היחידות מפצות בשעות שמירה ובכוח אדם.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תיקונים דחופים",
+      "נאריך את המשמרת"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year1-news-320-1",
+    "day": 685,
+    "title": "הרחפן לא עלה",
+    "body": "סוללות וחלפים חסרים בחלק מהיחידות. האבטחה ממשיכה בלי כל האמצעים.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נקצה רכש מצומצם",
+      "נבקש עוד תצפיתנים"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year1-review",
+    "day": 702,
+    "title": "סיכום השנה השנייה",
+    "body": "דו״ח הממשלה מציג את ההתחייבויות שנותרו ואת מצב השירותים. אפשר לפרסם תמונה מלאה או רק את ההישגים.",
+    "yes": {
+      "unity": 3
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לפרסם את הדו״ח",
+      "רק את עמוד ההישגים"
+    ],
+    "notice": true
+  },
+  {
+    "id": "cooperation-705",
+    "day": 705,
+    "title": "עבודות משני הצדדים",
+    "body": "מוצע מיזם תשתיות משותף. ההשקעה עולה כסף עכשיו והפיקוח יהיה הדדי.",
+    "answers": [
+      "להשקיע במיזם",
+      "לדחות את ההשקעה"
+    ],
+    "yes": {
+      "money": -3,
+      "support": 3,
+      "unity": -2,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year2-budget",
+    "day": 736,
+    "title": "תקציב עם כוכבית",
+    "body": "אפשר להפנות כסף לשירותים אזרחיים, או לצמצם הוצאות ולהשאיר כסף להתחייבויות הביטחון.",
+    "yes": {
+      "money": -3,
+      "unity": 8
+    },
+    "no": {
+      "money": 5,
+      "unity": -4
+    },
+    "answers": [
+      "לחזק שירותים אזרחיים",
+      "להגדיל את הרזרבה"
+    ]
+  },
+  {
+    "id": "year2-farm",
+    "day": 756,
+    "title": "כל גבעה צריכה שכן",
+    "body": "המועצה מבקשת נקודת התיישבות נוספת. כל משפחה מביאה נוכחות. כל נוכחות מביאה משימת אבטחה.",
+    "yes": {
+      "money": -6,
+      "support": -5,
+      "unity": 1,
+      "add": [
+        "new-2",
+        257,
+        95,
+        16
+      ]
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "אישור",
+      "סירוב"
+    ],
+    "build": true
+  },
+  {
+    "id": "year2-inertia",
+    "day": 773,
+    "title": "ההרחבה לא חיכתה",
+    "body": "משפחות מצטרפות ליישוב הקיים מכוח תוכנית ישנה. נדרשת אבטחה נוספת גם בלי החלטת בנייה חדשה.",
+    "yes": {
+      "money": -3,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": 1
+    },
+    "no": {
+      "money": -1,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": -1
+    },
+    "answers": [
+      "נכין את התשתיות",
+      "נקרא לזה גידול טבעי"
+    ],
+    "notice": true
+  },
+  {
+    "id": "year2-news-50-0",
+    "day": 781,
+    "title": "הטיסה נגמרה בחקירה",
+    "body": "איש מילואים עוכב לחקירה בחו״ל בעקבות פעולות שאושרו בממשלה.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן ייעוץ משפטי",
+      "נמליץ לנפוש בארץ"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "year2-news-50-1",
+    "day": 781,
+    "title": "אין כרטיס לתחרות",
+    "body": "ישראל הושעתה ממפעל ספורט בינלאומי. השר מבטיח ליגה בינלאומית מקומית.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לספורטאים",
+      "נזמין את עצמנו לגמר"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "year2-extension",
+    "day": 796,
+    "title": "רק לחבר בין הבתים",
+    "body": "החווה מבקשת לקלוט משפחות נוספות. מספר המבנים גדל וגם הכוח שיידרש להגן עליהם.",
+    "yes": {
+      "money": -5,
+      "support": -3,
+      "unity": 1,
+      "grow": [
+        "new-2",
+        7
+      ]
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לאשר את ההרחבה",
+      "לעצור כאן"
+    ],
+    "when": "new-2",
+    "build": true
+  },
+  {
+    "id": "cooperation-805",
+    "day": 805,
+    "title": "הערבויות במבחן",
+    "body": "המתווכים מבקשים דיווחים הדדיים על עמידה בהסכמות. חלק מהשרים מתנגדים לביקורת חיצונית.",
+    "answers": [
+      "למסור דיווח מפוקח",
+      "לצמצם שיתוף מידע"
+    ],
+    "yes": {
+      "support": 3,
+      "unity": -4,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 2,
+      "cooperation": -1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year2-reserve",
+    "day": 811,
+    "title": "עוד צו, אותו תיק",
+    "body": "המפקדים מבקשים עתודת מילואים נוספת. הגיוס ייתן מרווח בפריסה ויעלה כסף.",
+    "yes": {
+      "money": -7,
+      "unity": -2,
+      "reserve": 12
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לגייס עתודה",
+      "להסתדר עם הקיים"
+    ]
+  },
+  {
+    "id": "year2-gaza",
+    "day": 831,
+    "title": "החוף מתרחב",
+    "body": "תנועת ההתיישבות מבקשת להוסיף משפחות ברצועה. הבקשה כוללת אבטחה קבועה.",
+    "yes": {
+      "money": -7,
+      "support": -7,
+      "unity": 1,
+      "settleGaza": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לאשר התיישבות",
+      "לא להרחיב"
+    ],
+    "build": true
+  },
+  {
+    "id": "year2-legalize",
+    "day": 851,
+    "title": "משכונה למועצה",
+    "body": "המועצה מבקשת להסדיר עוד מתחם ולהפוך מבנים זמניים לקבע. לחתימה מצורפת הרחבה.",
+    "yes": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old1",
+        5
+      ],
+      "legalize": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "להסדיר ולהרחיב",
+      "לדחות את ההסדרה"
+    ],
+    "build": true
+  },
+  {
+    "id": "year2-embargo",
+    "day": 867,
+    "title": "משלוחי הנשק נעצרו",
+    "body": "לאחר הכשרת שלושה מתחמים מוקפאים רכיבי ציוד מחו״ל. החלופה המקומית יקרה.",
+    "yes": {
+      "money": -6,
+      "repair": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לממן חלופה מקומית",
+      "לדחות את הרכש"
+    ],
+    "when": "embargo",
+    "notice": true,
+    "reason": "הוכשרו לפחות שלושה מתחמים"
+  },
+  {
+    "id": "year2-news-145-0",
+    "day": 876,
+    "title": "הארנונה התגייסה",
+    "body": "הרשויות מעלות תשלומים אחרי קיצוץ בשירותים. התושבים כבר משתתפים במאמץ.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לרשויות",
+      "נשלח מכתב הערכה"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year2-news-145-1",
+    "day": 876,
+    "title": "פחות קווים, יותר המתנה",
+    "body": "סבסוד התחבורה קוצץ כדי לממן התחייבויות ביטחוניות. האוטובוס יגיע כשיגיע.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נשקם את הקווים",
+      "הליכה מחזקת חוסן"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year2-escort",
+    "day": 886,
+    "title": "עוד קו הסעות",
+    "body": "מערך ההסעות ליישובים מבקש אבטחה נוספת. אפשר להרחיבו או לצמצם נסיעות.",
+    "yes": {
+      "money": -4,
+      "grow": [
+        "old1",
+        4
+      ],
+      "unity": 1
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "להרחיב ליווי",
+      "לצמצם נסיעות"
+    ],
+    "when": "expansion",
+    "build": true
+  },
+  {
+    "id": "year2-illegal",
+    "day": 906,
+    "title": "המאחז עם השלט",
+    "body": "קבוצה התמקמה בנקודה ללא אישור. אפשר לפנות אותה או להסדיר נוכחות ואבטחה ביישוב הסמוך.",
+    "yes": {
+      "money": -3,
+      "unity": -3
+    },
+    "no": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old2",
+        5
+      ],
+      "legalize": true
+    },
+    "answers": [
+      "לפנות את הנקודה",
+      "להסדיר ולאבטח"
+    ],
+    "build": true
+  },
+  {
+    "id": "cooperation-920",
+    "day": 920,
+    "title": "משמרת משותפת בחמ״ל",
+    "body": "מוצע צוות קישור אזרחי למניעת תקלות במעברים. הכוחות ממשיכים לשמור בכל הגזרות.",
+    "answers": [
+      "לממן את הצוות",
+      "להשאיר את המצב הקיים"
+    ],
+    "yes": {
+      "money": -3,
+      "support": 2,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year2-readiness",
+    "day": 926,
+    "title": "האימון שנדחה",
+    "body": "המפקדים מבקשים חלון לתחזוקה וריענון. השיפור הדרגתי וממוקד ביחידות השחוקות.",
+    "yes": {
+      "money": -5,
+      "repair": true,
+      "unity": 2
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן ריענון",
+      "לדחות שוב"
+    ]
+  },
+  {
+    "id": "year2-migration-news",
+    "day": 939,
+    "title": "הקמפיין מצא קהל",
+    "body": "המשרד מדווח על הצלחת תוכנית ההגירה. בדו״ח המצורף אין הסכם קליטה קבוע.",
+    "yes": {
+      "money": -2,
+      "unity": 1
+    },
+    "no": {
+      "support": -2,
+      "unity": -2
+    },
+    "answers": [
+      "לבדוק את הנתונים",
+      "לחגוג את הכותרת"
+    ],
+    "when": "migration",
+    "notice": true,
+    "reason": "תוכנית ההגירה קודמה"
+  },
+  {
+    "id": "year2-revenue",
+    "day": 949,
+    "title": "מחזירים את המשק לעבודה",
+    "body": "האוצר מציע הסדרי אשראי והקלה על עסקים שנפגעו מהשירות הממושך. אפשר להתקדם או להעדיף גבייה מיידית.",
+    "yes": {
+      "money": 6,
+      "unity": 3
+    },
+    "no": {
+      "money": 10,
+      "unity": -5
+    },
+    "answers": [
+      "להפעיל את ההסדר",
+      "להעלות גבייה"
+    ]
+  },
+  {
+    "id": "year2-news-230-0",
+    "day": 961,
+    "title": "הרופאים אורזים",
+    "body": "מחלקות בבתי החולים מדווחות על עזיבת אנשי צוות. התורים מתארכים.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תוכנית שימור",
+      "נבקש עוד סבלנות"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year2-news-230-1",
+    "day": 961,
+    "title": "מעבדה מחפשת מדינה",
+    "body": "חוקרים ויזמים מעבירים פעילות לחו״ל בעקבות המשבר החברתי.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נפתח מסלול חזרה",
+      "הם עוד יתגעגעו"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year2-prayer",
+    "day": 971,
+    "title": "משמרת לילה בכולל",
+    "body": "הנציגים מציעים שירות רוחני במימון המדינה. המשתתפים לא מוסיפים כוח לוחם.",
+    "yes": {
+      "money": -4,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן שירות רוחני",
+      "לבקש שירות מעשי"
+    ]
+  },
+  {
+    "id": "year2-unity",
+    "day": 991,
+    "title": "דיון בלי צעקות",
+    "body": "נציגי משפחות מילואים, רשויות וארגוני חברה מבקשים הסכמות על נטל השירות ועל השירותים האזרחיים.",
+    "yes": {
+      "money": -3,
+      "unity": 7
+    },
+    "no": {
+      "unity": -4
+    },
+    "answers": [
+      "לכנס את הנציגים",
+      "להסתפק בהצהרה"
+    ]
+  },
+  {
+    "id": "social-violence",
+    "day": 1000,
+    "title": "אלימות בתוך הבית",
+    "body": "אדם נרצח בידי בן משפחתו על רקע סכסוך פוליטי. המשטרה חוקרת. ארגוני הסיוע מבקשים משאבים לטיפול ומניעה.",
+    "notice": true,
+    "serious": true,
+    "when": "division",
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    },
+    "answers": [
+      "להרחיב טיפול ומניעה",
+      "לכנס את גורמי המקצוע"
+    ],
+    "yes": {
+      "money": -3,
+      "unity": 2
+    },
+    "no": {
+      "money": -1,
+      "unity": 1
+    }
+  },
+  {
+    "id": "year2-gaza-withdraw",
+    "day": 1013,
+    "title": "האבטחה נשארה זמנית",
+    "body": "גורמי המקצוע מציעים פינוי מוסכם של היישובים ברצועה והשבת כוח האבטחה למקורותיו. נדרש מימון והמהלך מעורר התנגדות.",
+    "yes": {
+      "money": -5,
+      "unity": -5,
+      "withdraw": "gaza"
+    },
+    "no": {
+      "money": -2
+    },
+    "answers": [
+      "לפנות ולהשיב כוחות",
+      "להשאיר את היישובים"
+    ],
+    "when": "gaza"
+  },
+  {
+    "id": "year2-freeze",
+    "day": 1033,
+    "title": "קו גבול להסכמות",
+    "body": "מוצע פינוי מוסכם של נקודת ההתיישבות החדשה האחרונה ביו״ש. התחייבויות אחרות נשארות בתוקף.",
+    "yes": {
+      "money": -3,
+      "unity": -3,
+      "withdraw": "newest"
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לפנות בהסכמה",
+      "להשאיר ולאבטח"
+    ],
+    "when": "new-wb"
+  },
+  {
+    "id": "cooperation-1050",
+    "day": 1050,
+    "title": "איומים על השיחות",
+    "body": "ארגונים המתנגדים להסכם מאיימים להסלים. הצוותים מבקשים להמשיך בתיאום ובאבטחה.",
+    "answers": [
+      "להמשיך תחת אבטחה",
+      "לסגור את הערוץ"
+    ],
+    "yes": {
+      "money": -3,
+      "unity": -3,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 2,
+      "recognition": false
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year2-news-320-0",
+    "day": 1051,
+    "title": "המוסך מחכה לתקציב",
+    "body": "כלים ממתינים לתיקון. היחידות מפצות בשעות שמירה ובכוח אדם.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תיקונים דחופים",
+      "נאריך את המשמרת"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year2-news-320-1",
+    "day": 1051,
+    "title": "הרחפן לא עלה",
+    "body": "סוללות וחלפים חסרים בחלק מהיחידות. האבטחה ממשיכה בלי כל האמצעים.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נקצה רכש מצומצם",
+      "נבקש עוד תצפיתנים"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year2-review",
+    "day": 1068,
+    "title": "עוד שנה, עוד אחריות",
+    "body": "דו״ח הממשלה מציג את ההתחייבויות שנותרו ואת מצב השירותים. אפשר לפרסם תמונה מלאה או רק את ההישגים.",
+    "yes": {
+      "unity": 3
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לפרסם את הדו״ח",
+      "רק את עמוד ההישגים"
+    ],
+    "notice": true
+  },
+  {
+    "id": "year3-budget",
+    "day": 1101,
+    "title": "שנת הבחירות",
+    "body": "אפשר להפנות כסף לשירותים אזרחיים, או לצמצם הוצאות ולהשאיר כסף להתחייבויות הביטחון.",
+    "yes": {
+      "money": -3,
+      "unity": 8
+    },
+    "no": {
+      "money": 5,
+      "unity": -4
+    },
+    "answers": [
+      "לחזק שירותים אזרחיים",
+      "להגדיל את הרזרבה"
+    ]
+  },
+  {
+    "id": "year3-farm",
+    "day": 1121,
+    "title": "החווה האחרונה בהחלט",
+    "body": "המועצה מבקשת נקודת התיישבות נוספת. כל משפחה מביאה נוכחות. כל נוכחות מביאה משימת אבטחה.",
+    "yes": {
+      "money": -6,
+      "support": -5,
+      "unity": 1,
+      "add": [
+        "new-3",
+        231,
+        462,
+        18
+      ]
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "אישור",
+      "סירוב"
+    ],
+    "build": true
+  },
+  {
+    "id": "year3-inertia",
+    "day": 1138,
+    "title": "עוד מפתח נמסר",
+    "body": "משפחות מצטרפות ליישוב הקיים מכוח תוכנית ישנה. נדרשת אבטחה נוספת גם בלי החלטת בנייה חדשה.",
+    "yes": {
+      "money": -3,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": 1
+    },
+    "no": {
+      "money": -1,
+      "grow": [
+        "old2",
+        3
+      ],
+      "unity": -1
+    },
+    "answers": [
+      "נממן את החיבור",
+      "נצטלם במסירה"
+    ],
+    "notice": true
+  },
+  {
+    "id": "year3-news-50-0",
+    "day": 1146,
+    "title": "הטיסה נגמרה בחקירה",
+    "body": "איש מילואים עוכב לחקירה בחו״ל בעקבות פעולות שאושרו בממשלה.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן ייעוץ משפטי",
+      "נמליץ לנפוש בארץ"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "year3-news-50-1",
+    "day": 1146,
+    "title": "אין כרטיס לתחרות",
+    "body": "ישראל הושעתה ממפעל ספורט בינלאומי. השר מבטיח ליגה בינלאומית מקומית.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לספורטאים",
+      "נזמין את עצמנו לגמר"
+    ],
+    "when": "isolation",
+    "notice": true,
+    "trigger": {
+      "resource": "support",
+      "below": 60
+    }
+  },
+  {
+    "id": "cooperation-1160",
+    "day": 1160,
+    "title": "תוכנית עבודה לשנה הבאה",
+    "body": "מוצעת מסגרת כלכלית משותפת לשנת הכהונה האחרונה. המנגנונים הביטחוניים נשארים בתוקף.",
+    "answers": [
+      "לאשר תוכנית מפוקחת",
+      "להסתפק בהסכמות הקיימות"
+    ],
+    "yes": {
+      "money": 5,
+      "support": 3,
+      "unity": -2,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year3-extension",
+    "day": 1161,
+    "title": "הרחבה לפני הבחירות",
+    "body": "החווה מבקשת לקלוט משפחות נוספות. מספר המבנים גדל וגם הכוח שיידרש להגן עליהם.",
+    "yes": {
+      "money": -5,
+      "support": -3,
+      "unity": 1,
+      "grow": [
+        "new-3",
+        7
+      ]
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לאשר את ההרחבה",
+      "לעצור כאן"
+    ],
+    "when": "new-3",
+    "build": true
+  },
+  {
+    "id": "year3-reserve",
+    "day": 1176,
+    "title": "סבב אחרון לכאורה",
+    "body": "המפקדים מבקשים עתודת מילואים נוספת. הגיוס ייתן מרווח בפריסה ויעלה כסף.",
+    "yes": {
+      "money": -7,
+      "unity": -2,
+      "reserve": 12
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לגייס עתודה",
+      "להסתדר עם הקיים"
+    ]
+  },
+  {
+    "id": "year3-gaza",
+    "day": 1196,
+    "title": "עוד רחוב על החוף",
+    "body": "תנועת ההתיישבות מבקשת להוסיף משפחות ברצועה. הבקשה כוללת אבטחה קבועה.",
+    "yes": {
+      "money": -7,
+      "support": -7,
+      "unity": 1,
+      "settleGaza": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לאשר התיישבות",
+      "לא להרחיב"
+    ],
+    "build": true
+  },
+  {
+    "id": "year3-legalize",
+    "day": 1216,
+    "title": "חותמת לפני סוף הכהונה",
+    "body": "המועצה מבקשת להסדיר עוד מתחם ולהפוך מבנים זמניים לקבע. לחתימה מצורפת הרחבה.",
+    "yes": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old1",
+        5
+      ],
+      "legalize": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "להסדיר ולהרחיב",
+      "לדחות את ההסדרה"
+    ],
+    "build": true
+  },
+  {
+    "id": "year3-embargo",
+    "day": 1232,
+    "title": "משלוחי הנשק נעצרו",
+    "body": "לאחר הכשרת שלושה מתחמים מוקפאים רכיבי ציוד מחו״ל. החלופה המקומית יקרה.",
+    "yes": {
+      "money": -6,
+      "repair": true
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לממן חלופה מקומית",
+      "לדחות את הרכש"
+    ],
+    "when": "embargo",
+    "notice": true,
+    "reason": "הוכשרו לפחות שלושה מתחמים"
+  },
+  {
+    "id": "year3-news-145-0",
+    "day": 1241,
+    "title": "הארנונה התגייסה",
+    "body": "הרשויות מעלות תשלומים אחרי קיצוץ בשירותים. התושבים כבר משתתפים במאמץ.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נסייע לרשויות",
+      "נשלח מכתב הערכה"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year3-news-145-1",
+    "day": 1241,
+    "title": "פחות קווים, יותר המתנה",
+    "body": "סבסוד התחבורה קוצץ כדי לממן התחייבויות ביטחוניות. האוטובוס יגיע כשיגיע.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נשקם את הקווים",
+      "הליכה מחזקת חוסן"
+    ],
+    "when": "spending",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 70
+    }
+  },
+  {
+    "id": "year3-escort",
+    "day": 1251,
+    "title": "אבטחה עד הבית",
+    "body": "מערך ההסעות ליישובים מבקש אבטחה נוספת. אפשר להרחיבו או לצמצם נסיעות.",
+    "yes": {
+      "money": -4,
+      "grow": [
+        "old1",
+        4
+      ],
+      "unity": 1
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "להרחיב ליווי",
+      "לצמצם נסיעות"
+    ],
+    "when": "expansion",
+    "build": true
+  },
+  {
+    "id": "year3-illegal",
+    "day": 1271,
+    "title": "כבר נטעו עצים",
+    "body": "קבוצה התמקמה בנקודה ללא אישור. אפשר לפנות אותה או להסדיר נוכחות ואבטחה ביישוב הסמוך.",
+    "yes": {
+      "money": -3,
+      "unity": -3
+    },
+    "no": {
+      "money": -5,
+      "support": -4,
+      "grow": [
+        "old2",
+        5
+      ],
+      "legalize": true
+    },
+    "answers": [
+      "לפנות את הנקודה",
+      "להסדיר ולאבטח"
+    ],
+    "build": true
+  },
+  {
+    "id": "cooperation-1280",
+    "day": 1280,
+    "title": "הסכם גם אחרי הבחירות",
+    "body": "המוקטעה והמתווכים מבקשים התחייבות להמשכיות ההסכם. יריבים פוליטיים קוראים לכך כבילה מראש.",
+    "answers": [
+      "להתחייב להמשכיות",
+      "לא להתחייב מראש"
+    ],
+    "yes": {
+      "support": 3,
+      "unity": -4,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": 2,
+      "cooperation": -1
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year3-readiness",
+    "day": 1291,
+    "title": "לפני הסבב הבא",
+    "body": "המפקדים מבקשים חלון לתחזוקה וריענון. השיפור הדרגתי וממוקד ביחידות השחוקות.",
+    "yes": {
+      "money": -5,
+      "repair": true,
+      "unity": 2
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן ריענון",
+      "לדחות שוב"
+    ]
+  },
+  {
+    "id": "year3-migration-news",
+    "day": 1304,
+    "title": "היעד עוד בבדיקה",
+    "body": "המשרד מדווח על הצלחת תוכנית ההגירה. בדו״ח המצורף אין הסכם קליטה קבוע.",
+    "yes": {
+      "money": -2,
+      "unity": 1
+    },
+    "no": {
+      "support": -2,
+      "unity": -2
+    },
+    "answers": [
+      "לבדוק את הנתונים",
+      "לחגוג את הכותרת"
+    ],
+    "when": "migration",
+    "notice": true,
+    "reason": "תוכנית ההגירה קודמה"
+  },
+  {
+    "id": "year3-revenue",
+    "day": 1314,
+    "title": "רשת ביטחון לעסקים",
+    "body": "האוצר מציע הסדרי אשראי והקלה על עסקים שנפגעו מהשירות הממושך. אפשר להתקדם או להעדיף גבייה מיידית.",
+    "yes": {
+      "money": 6,
+      "unity": 3
+    },
+    "no": {
+      "money": 10,
+      "unity": -5
+    },
+    "answers": [
+      "להפעיל את ההסדר",
+      "להעלות גבייה"
+    ]
+  },
+  {
+    "id": "year3-news-230-0",
+    "day": 1326,
+    "title": "הרופאים אורזים",
+    "body": "מחלקות בבתי החולים מדווחות על עזיבת אנשי צוות. התורים מתארכים.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תוכנית שימור",
+      "נבקש עוד סבלנות"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year3-news-230-1",
+    "day": 1326,
+    "title": "מעבדה מחפשת מדינה",
+    "body": "חוקרים ויזמים מעבירים פעילות לחו״ל בעקבות המשבר החברתי.",
+    "yes": {
+      "money": -2,
+      "unity": 2
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נפתח מסלול חזרה",
+      "הם עוד יתגעגעו"
+    ],
+    "when": "division",
+    "notice": true,
+    "trigger": {
+      "resource": "unity",
+      "below": 45
+    }
+  },
+  {
+    "id": "year3-prayer",
+    "day": 1336,
+    "title": "כיפת ברכה",
+    "body": "הנציגים מציעים שירות רוחני במימון המדינה. המשתתפים לא מוסיפים כוח לוחם.",
+    "yes": {
+      "money": -4,
+      "prayer": true,
+      "unity": 1
+    },
+    "no": {
+      "unity": -1
+    },
+    "answers": [
+      "לממן שירות רוחני",
+      "לבקש שירות מעשי"
+    ]
+  },
+  {
+    "id": "year3-unity",
+    "day": 1356,
+    "title": "להחזיר אמון",
+    "body": "נציגי משפחות מילואים, רשויות וארגוני חברה מבקשים הסכמות על נטל השירות ועל השירותים האזרחיים.",
+    "yes": {
+      "money": -3,
+      "unity": 7
+    },
+    "no": {
+      "unity": -4
+    },
+    "answers": [
+      "לכנס את הנציגים",
+      "להסתפק בהצהרה"
+    ]
+  },
+  {
+    "id": "year3-gaza-withdraw",
+    "day": 1378,
+    "title": "לסיים את ההתחייבות",
+    "body": "גורמי המקצוע מציעים פינוי מוסכם של היישובים ברצועה והשבת כוח האבטחה למקורותיו. נדרש מימון והמהלך מעורר התנגדות.",
+    "yes": {
+      "money": -5,
+      "unity": -5,
+      "withdraw": "gaza"
+    },
+    "no": {
+      "money": -2
+    },
+    "answers": [
+      "לפנות ולהשיב כוחות",
+      "להשאיר את היישובים"
+    ],
+    "when": "gaza"
+  },
+  {
+    "id": "year3-freeze",
+    "day": 1398,
+    "title": "לפני שמתחייבים לעוד",
+    "body": "מוצע פינוי מוסכם של נקודת ההתיישבות החדשה האחרונה ביו״ש. התחייבויות אחרות נשארות בתוקף.",
+    "yes": {
+      "money": -3,
+      "unity": -3,
+      "withdraw": "newest"
+    },
+    "no": {
+      "unity": 1
+    },
+    "answers": [
+      "לפנות בהסכמה",
+      "להשאיר ולאבטח"
+    ],
+    "when": "new-wb"
+  },
+  {
+    "id": "cooperation-1400",
+    "day": 1400,
+    "title": "שגרה שאינה מובנת מאליה",
+    "body": "צוותי הקישור מציעים לחדש את ההסכמות ולפרסם את המחלוקות שנותרו פתוחות.",
+    "answers": [
+      "לחדש ולפרסם",
+      "לחדש בלי פרסום מלא"
+    ],
+    "yes": {
+      "money": -2,
+      "support": 2,
+      "unity": 2,
+      "cooperation": 1
+    },
+    "no": {
+      "unity": -2
+    },
+    "when": "talks"
+  },
+  {
+    "id": "year3-news-320-0",
+    "day": 1416,
+    "title": "המוסך מחכה לתקציב",
+    "body": "כלים ממתינים לתיקון. היחידות מפצות בשעות שמירה ובכוח אדם.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נממן תיקונים דחופים",
+      "נאריך את המשמרת"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year3-news-320-1",
+    "day": 1416,
+    "title": "הרחפן לא עלה",
+    "body": "סוללות וחלפים חסרים בחלק מהיחידות. האבטחה ממשיכה בלי כל האמצעים.",
+    "yes": {
+      "money": -2,
+      "unity": 2,
+      "repair": true
+    },
+    "no": {
+      "unity": -3
+    },
+    "answers": [
+      "נקצה רכש מצומצם",
+      "נבקש עוד תצפיתנים"
+    ],
+    "when": "equipment",
+    "notice": true,
+    "trigger": {
+      "resource": "money",
+      "below": 40
+    }
+  },
+  {
+    "id": "year3-review",
+    "day": 1433,
+    "title": "החודש האחרון",
+    "body": "דו״ח הממשלה מציג את ההתחייבויות שנותרו ואת מצב השירותים. אפשר לפרסם תמונה מלאה או רק את ההישגים.",
+    "yes": {
+      "unity": 3
+    },
+    "no": {
+      "unity": -2
+    },
+    "answers": [
+      "לפרסם את הדו״ח",
+      "רק את עמוד ההישגים"
+    ],
+    "notice": true
+  }
+];
+// Abstract playtest rules, not a real-world security forecast.
+const CAMPAIGN_END=1461; // 2027–2030 includes leap year 2028.
+const BALANCE={daysPerSecond:2.5,quarterDays:90,baseRevenue:8,offerDay:240,buildRefusals:3,incidentCooldown:120,gazaInterval:150,civilianLossLimit:12};
+const PEACE_STEPS=[
+ {id:'talks-channel',title:'פותחים ערוץ ישיר',body:'המוקטעה מציעה צוות קשר קבוע למניעת הסלמה. ההכרה היא בסיס לשיחות, לא תחליף לאבטחה.',yes:{money:-2,support:3,unity:-2,cooperation:1},no:{unity:1},answers:['להקים צוות קשר','להמתין עם התיאום']},
+ {id:'talks-coordination',title:'תיאום בשטח',body:'מוצע מנגנון משותף להעברת התרעות וטיפול בתקריות. הוא יקל מעט על עומס האבטחה, אך לא יבטל אותו.',yes:{money:-3,support:3,unity:-2,cooperation:1,coordinate:true},no:{unity:1},answers:['להפעיל את המנגנון','להשאיר ערוצים נפרדים']},
+ {id:'talks-crossings',title:'פותחים מעבר לסחורות',body:'צוותי השיחות מציעים מסלול מפוקח למסחר. ההכנסות עשויות להשתפר; הבדיקות והאבטחה יימשכו.',yes:{money:6,support:4,unity:-2,cooperation:1},no:{unity:1},answers:['לפתוח מסלול מפוקח','לא לשנות את המעברים']},
+ {id:'talks-crisis',title:'תקרית בזמן השיחות',body:'תקרית אלימה מקומית מעוררת דרישות להפסיק את המגעים. שני הצוותים מציעים בדיקה משותפת. המתיחות לא נעלמה.',yes:{money:-2,unity:-3,cooperation:1},no:{unity:2,recognition:false},answers:['לבדוק ולהמשיך בשיחות','להפסיק את המסלול']},
+ {id:'talks-observers',title:'ערבויות עם פיקוח',body:'מתווכים מציעים פיקוח הדדי על ההסכמות וערבויות מדורגות. אין הבטחה לאפס תקריות.',yes:{money:-3,support:5,unity:-3,cooperation:1},no:{unity:1},answers:['לקבל פיקוח הדדי','להסתפק בערוץ הישיר']},
+ {id:'talks-agreement',title:'מסגרת להסכם',body:'הצוותים מציעים מסגרת להכרה הדדית, מסחר ותיאום. יישובים ופריסת כוחות אינם משתנים אוטומטית.',yes:{support:5,unity:-3,cooperation:1},no:{unity:1},answers:['לאשר את המסגרת','להמשיך בלי הסכם מסגרת']}
+];
+function settlementNodes(nodes){return nodes.filter(n=>n.kind==='target'&&!n.temporary&&!n.reserveOnly);}
+function gazaNodes(nodes){return settlementNodes(nodes).filter(n=>n.region==='gaza'||n.id==='gaza');}
+function quarterlyMoney(resources,nodes,state){
+ const load=settlementNodes(nodes).reduce((s,n)=>s+(n.baseNeed??n.need),0);
+ return Math.round(BALANCE.baseRevenue-load*.1-Math.max(0,60-resources.support)*.12+(state.cooperation>=2?3:0));
+}
+class CampaignClock {
+ constructor(random=Math.random){this.day=0;this.index=0;this.refusals=0;this.random=random;this.queue=[];this.sequence=0;this.nextQuarter=90;this.nextGaza=150;this.nextIncident=120;this.nextRotation=330;this.offerShown=false;this.state={buildStreak:0,buildRefusals:0,buildApprovals:0,recognition:false,cooperation:0,migration:false,offensive:false,legalizations:0,soldiersKilled:0,civiliansKilled:0};this.history=[];this.lastCardDay=-100;}
+ step(seconds,paused){if(!paused)this.day=Math.min(CAMPAIGN_END,this.day+seconds*BALANCE.daysPerSecond);}
+ eligible(key,ctx){const s=this.state,n=ctx.nodes,r=ctx.resources;return key==='new-wb'?settlementNodes(n).some(v=>!['old1','old2','gaza'].includes(v.id)&&v.region!=='gaza'):key==='spending'?r.money<70:key==='equipment'?r.money<40:key==='isolation'?r.support<60:key==='division'?r.unity<45:key==='restraint'?s.buildStreak>=3:key==='talks'?s.recognition:key==='cooperation'?s.recognition&&s.cooperation>=2:key==='migration'?s.migration:key==='offensive'?s.offensive:key==='embargo'?s.legalizations>=3:key==='gaza'?gazaNodes(n).length>0:key==='expansion'?s.buildApprovals>=2:n.some(v=>v.id===key);}
+ enqueue(card,delay=14){this.queue.push({...card,id:card.id||'event-'+(++this.sequence),day:this.day+delay});}
+ record(card,yes){const effect=(yes?card.yes:card.no)||{},s=this.state;
+  if(!yes)this.refusals++;
+  if(!card.notice&&(card.build||card.yes?.add||card.yes?.grow||card.no?.add)){
+   if(effect.add||effect.grow||effect.settleGaza){s.buildApprovals++;s.buildStreak=0;}else{s.buildStreak++;s.buildRefusals++;}
+  }
+  if(effect.recognition!==undefined){s.recognition=effect.recognition;if(!s.recognition)s.cooperation=0;}
+  if(effect.cooperation&&s.recognition)s.cooperation=Math.max(0,s.cooperation+effect.cooperation);
+  if(effect.migration)s.migration=true;if(effect.offensive)s.offensive=true;if(effect.legalize)s.legalizations++;
+  if(effect.soldiersKilled)s.soldiersKilled+=effect.soldiersKilled;
+  if(effect.civiliansKilled)s.civiliansKilled+=effect.civiliansKilled;
+  this.history.push({day:Math.floor(this.day),id:card.id,title:card.title,yes,effect:{...effect}});
+  if(effect.surge?.[1]>0)this.enqueue({title:'החלפת הכוחות הושלמה',body:'כוח האבטחה חזר לשגרה. אפשר להשיב את התגבור לפריסה לפי הצורך.',notice:true,yes:{surge:[effect.surge[0],-effect.surge[1]]},no:{surge:[effect.surge[0],-effect.surge[1]]},answers:['לבחון מחדש את הפריסה','להשאיר כרגע את התגבור']},45);
+  if(card.id==='muqata-offer'&&yes)this.enqueue({...PEACE_STEPS[0],when:'talks'},45);
+  const peaceIndex=PEACE_STEPS.findIndex(c=>c.id===card.id);
+  if(peaceIndex>=0&&peaceIndex<PEACE_STEPS.length-1&&s.recognition)this.enqueue({...PEACE_STEPS[peaceIndex+1],when:'talks'},65);
+  // One original proposal becomes the complete pressure → coalition → illegal outpost chain.
+  if(card.id==='original-1'&&!yes)this.enqueue({id:'pressure-security',title:'הגבעה היא השכפ״ץ',body:'השר חוזר עם מצגת: בלי משפחות על הגבעה, מי ישמור על המרכז?',build:true,yes:{money:-7,support:-4,unity:2,add:['farm',313,282,10]},no:{unity:-3},answers:['לאשר את החווה','להשאיר את הכוח בגבול']});
+  if(card.id==='pressure-security'&&!yes)this.enqueue({id:'pressure-coalition',title:'בלי חווה אין רוב',body:'השותפים מאיימים להפיל את ההצבעה הבאה. הבקשה לחווה חוזרת לשולחן.',build:true,yes:{money:-7,support:-4,unity:2,add:['farm',313,282,10]},no:{unity:-4},answers:['אישור','סירוב']},21);
+  if(card.id==='pressure-coalition'&&!yes)this.enqueue({id:'unauthorized-farm',title:'כבר יש עובדות בשטח',body:'קרוואן ועדר הגיעו בלילה בלי אישור. המועצה מבקשת אבטחה.',build:true,yes:{money:-3,unity:-3},no:{money:-5,support:-4,unity:1,add:['farm',313,282,10]},answers:['לאכוף את הפינוי','להשאיר ולאבטח']},21);
+ }
+ dynamic(ctx){
+  const s=this.state;
+  if(!this.offerShown&&this.day>=BALANCE.offerDay&&s.buildStreak>=BALANCE.buildRefusals){this.offerShown=true;return {id:'muqata-offer',title:'מסר מהמוקטעה',body:'לאחר רצף הסירובים לבנייה מגיעה פנייה: האם תהיה מוכן להכיר במדינה פלסטינית, במסגרת הסכם עם ערבויות ביטחוניות, פיקוח הדדי והקפאת הרחבות?',yes:{recognition:true,cooperation:1,support:4,unity:-5,money:-2},no:{unity:1},answers:['כן, במסגרת הסכם','לא למדינה פלסטינית']};}
+  if(this.day>=this.nextQuarter){this.nextQuarter+=BALANCE.quarterDays;const money=quarterlyMoney(ctx.resources,ctx.nodes,s);return {id:'quarter-'+this.nextQuarter,title:money>=0?'הכנסות הרבעון':'התחייבויות הרבעון',body:money>=0?'הכנסות המדינה התקבלו לאחר תשלום התחייבויות האבטחה והשירותים.':'עלויות האבטחה והפגיעה במסחר עולות על ההכנסות ברבעון הזה.',notice:true,yes:{money,unity:1},no:{money,unity:-1},answers:money>=0?['נשאיר מרווח להמשך','נכריז שהכול מצוין']:['נפרסם את החשבון','נקרא לזה השקעה בעתיד']};}
+  if(this.day>=this.nextRotation){this.nextRotation=this.day+140;const sites=settlementNodes(ctx.nodes);if(sites.length){const site=sites[Math.min(sites.length-1,Math.floor(this.random()*sites.length))];return {id:'rotation-'+(++this.sequence),title:'החלפה באמצע המשמרת',body:'כוח האבטחה ביישוב יוצא לריענון. בתקופת החפיפה נדרש תגבור זמני. אפשר לממן חילוף מסודר או לדחות חלק מהתחזוקה.',notice:true,reason:'שירות ממושך במשימות אבטחה',yes:{money:-3,surge:[site.id,6],unity:2},no:{surge:[site.id,8],unity:-2},answers:['לממן חילוף מסודר','להסתפק בחפיפה קצרה']};}}
+  if(this.day>=this.nextGaza){this.nextGaza=this.day+BALANCE.gazaInterval;if(gazaNodes(ctx.nodes).length){return {id:'gaza-loss-'+(++this.sequence),title:'הותר לפרסום',body:'חייל מילואים נהרג במהלך משימת אבטחה ליד יישוב ברצועת עזה. הודעה נמסרה למשפחתו.',notice:true,serious:true,reason:'משימת אבטחה של יישוב בעזה',yes:{soldiersKilled:1,money:-2,unity:-1},no:{soldiersKilled:1,unity:-2},answers:['סיוע מיידי למשפחה','תחקיר ועדכון המשפחה']};}}
+  if(this.day>=this.nextIncident&&ctx.exposed?.length){this.nextIncident=this.day+BALANCE.incidentCooldown;const target=ctx.exposed[Math.min(ctx.exposed.length-1,Math.floor(this.random()*ctx.exposed.length))];return {id:'incident-'+(++this.sequence),title:'פיגוע בגזרה',body:'חמושים תקפו בגזרה שחסרה בה אבטחה. שני אזרחים נהרגו. הכוחות עדיין נדרשים לסגור את הפער.',notice:true,serious:true,incidentTarget:target.id,reason:'חוסר אבטחה ממושך בגזרה',yes:{civiliansKilled:2,money:-2,unity:-2},no:{civiliansKilled:2,unity:-3},answers:['סיוע לנפגעים ותחקיר','לתעדף את סגירת הפער']};}
+  return null;
+ }
+ next(eligible,ctx){
+  if(ctx&&this.day<CAMPAIGN_END&&this.day-this.lastCardDay<8)return null;
+  const present=c=>{this.lastCardDay=this.day;return c;};
+  for(let due=this.queue.findIndex(c=>c.day<=this.day);due>=0;due=this.queue.findIndex(c=>c.day<=this.day)){const c=this.queue.splice(due,1)[0];if(!c.when||eligible(c.when))return present(c);}
+  if(ctx){const c=this.dynamic(ctx);if(c)return present(c);}
+  while(this.index<CAMPAIGN.length&&CAMPAIGN[this.index].day<=this.day){const day=CAMPAIGN[this.index].day,options=[];while(this.index<CAMPAIGN.length&&CAMPAIGN[this.index].day===day){const c=CAMPAIGN[this.index++];if(!c.when||eligible(c.when))options.push(c);}if(options.length)return present(options[Math.min(options.length-1,Math.floor(this.random()*options.length))]);}return null;
+ }
+}
+if(typeof module!=='undefined')module.exports={CAMPAIGN,CampaignClock,CAMPAIGN_END,BALANCE,quarterlyMoney,settlementNodes,gazaNodes,PEACE_STEPS};
+
+// Provisional per-unit supply deterioration, measured only during active map time.
+function syncEquipment(nodes){for(const n of nodes){n.readiness??=1;n.morale??=1;if(n.kind==='target'){n.baseNeed??=n.need;n.need=Math.ceil(n.baseNeed/n.readiness);}}}
+class EquipmentModel{constructor(random=Math.random){this.elapsed=0;this.random=random;}step(nodes,money,seconds,paused=false){if(paused)return false;this.elapsed+=seconds;if(this.elapsed<15)return false;this.elapsed-=15;const candidates=nodes.filter(n=>!n.reserve);if(!candidates.length)return false;const n=candidates[Math.min(candidates.length-1,Math.floor(this.random()*candidates.length))];const before=n.readiness??1;if(money<40&&this.random()<.75)n.readiness=Math.max(.7,before-(money<20?.05:.025));else if(money>=60)n.readiness=Math.min(1,before+.025);syncEquipment(nodes);return before!==n.readiness;}}
+if(typeof module!=='undefined')module.exports={EquipmentModel,syncEquipment};
+
+const RESOURCE_LABELS={money:'כסף',support:'תמיכה עולמית',unity:'אחדות העם'};
+function extensiveSettlement(nodes){return nodes.some(n=>n.id==='gaza')||nodes.filter(n=>n.kind==='target'&&!['old1','old2','gaza','tour'].includes(n.id)).length>=3;}
+function policyEffect(effect,nodes){const result={...effect};if(result.support>0&&extensiveSettlement(nodes))result.support=0;return result;}
+function depletedResource(resources){return Object.keys(RESOURCE_LABELS).find(k=>resources[k]<=0)||null;}
+if(typeof module!=='undefined')module.exports={policyEffect,depletedResource,extensiveSettlement};
+
+// Structural consequences shared by the browser and balance simulations.
+function applyCampaignEffects(model,effect){
+ let revealId=null;
+ function addSite(id,x,y,need,region='wb'){if(model.get(id))return;model.nodes.push({id,x,y,need,baseNeed:need,region,kind:'target',troops:[],reserveOnly:!!effect.reserveOnly,temporary:!!effect.reserveOnly});revealId=id;}
+ function growSite(id,amount){const n=model.get(id);if(!n)return;n.baseNeed=(n.baseNeed??n.need)+amount;n.need=n.baseNeed;revealId=id;}
+ if(effect.add)addSite(...effect.add,effect.add[0]==='gaza'?'gaza':'wb');
+ if(effect.grow)growSite(...effect.grow);
+ if(effect.surge)growSite(...effect.surge);
+ if(effect.settleGaza){if(model.get('gaza'))growSite('gaza',8);else addSite('gaza',82,543,20,'gaza');}
+ if(effect.reserve)model.get('reserve').troops.push({home:'reserve',count:effect.reserve});
+ if(effect.withdraw){
+  const eligible=model.nodes.filter(n=>n.kind==='target'&&!n.reserveOnly&&!['old1','old2'].includes(n.id));
+  const removed=effect.withdraw==='gaza'?eligible.filter(n=>n.region==='gaza'||n.id==='gaza'):eligible.filter(n=>n.region!=='gaza'&&n.id!=='gaza').slice(-1);
+  for(const n of removed){for(const t of n.troops){const home=model.get(t.home)||model.get('reserve');home.troops.push({...t});}model.nodes=model.nodes.filter(v=>v!==n);}
+ }
+ if(effect.repair){const worn=model.nodes.filter(n=>!n.reserve).sort((a,b)=>(a.readiness??1)-(b.readiness??1)).slice(0,2);for(const n of worn)n.readiness=Math.min(1,(n.readiness??1)+.075);}
+ if(effect.coordinate){for(const n of model.nodes.filter(n=>n.kind==='target'&&!n.reserveOnly)){n.baseNeed=Math.max(8,(n.baseNeed??n.need)-1);}}
+ return revealId;
+}
+if(typeof module!=='undefined')module.exports=applyCampaignEffects;
+
+const initialNodes=[
+{id:'w1',x:200,y:135,kind:'source',initial:30},
+{id:'w2',x:173,y:267,kind:'source',initial:30},
+{id:'w3',x:198,y:396,kind:'source',initial:30},
+{id:'g1',x:115,y:487,kind:'source',initial:30},
+{id:'g2',x:182,y:594,kind:'source',initial:30},
+{id:'inside',x:66,y:598,kind:'source',initial:20},
+{id:'reserve',x:305,y:587,kind:'source',initial:40,reserve:true},
+{id:'old1',x:296,y:197,kind:'target',need:15,initial:10,home:'w1'},
+{id:'old2',x:300,y:382,kind:'target',need:10,initial:10,home:'w3'}];
+const svg=document.querySelector('svg'),layer=document.querySelector('#nodes'),paths=document.querySelector('#travel');let model,drag=null,epoch=0,phase=0,modal=true,flights=new Map();
+const $=id=>document.getElementById(id);function node(tag,attrs,parent){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);parent.append(n);return n}
+const dateFormatter=new Intl.DateTimeFormat('he-IL',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+let campaign=new CampaignClock(),currentCard=null,ambientTime=0;
+let danger=new DangerModel(),dangerWarning=false;
+let reveal=null,attack=null,equipment=new EquipmentModel();
+function revealSite(id){reveal={id,elapsed:0};modal=true;}
+function animateReveal(dt){if(!reveal)return;reveal.elapsed+=dt;const t=Math.min(1,reveal.elapsed/1000),n=model.get(reveal.id),g=layer.querySelector(`[data-id="${n.id}"]`);if(g){const p=Math.min(1,t/0.65),scale=1-Math.pow(1-p,3);g.setAttribute("transform",`translate(${n.x} ${n.y})`);g.querySelector("circle")?.setAttribute("r",23*scale);g.setAttribute("opacity",Math.min(1,t*5));let ring=g.querySelector(".reveal-ring");if(!ring)ring=node("circle",{class:"reveal-ring",fill:"none",stroke:"#fffdf5","stroke-width":5,"pointer-events":"none"},g);ring.setAttribute("r",30+t*30);ring.setAttribute("opacity",1-t);if(t===1){ring.remove();g.removeAttribute("opacity");g.setAttribute("transform",`translate(${n.x} ${n.y})`)}}if(t===1){reveal=null;modal=false;}}
+let decision=false,cardDrag=null,resources={money:80,support:75,unity:70},growthTarget="new";
+function showCard(title,body,isDecision=false){$('okay').textContent=(phase===6||phase===7)?'שחק שוב':'פסדר';decision=isDecision;$('okay').hidden=isDecision;$('choices').hidden=!isDecision;$('card').style.transform='translateY(-50%)';modal=true;$('unit-info').hidden=true;$('card').hidden=false;$('title').textContent=title;$('body').textContent=body;$('approve').textContent=currentCard?.answers?.[0]||'אישור';$('decline').textContent=currentCard?.answers?.[1]||'סירוב';$('response-label').hidden=!currentCard?.notice;const trigger=currentCard?.trigger;$('trigger').hidden=!trigger;$('trigger').replaceChildren();if(trigger){const text=document.createElement('strong');text.textContent=RESOURCE_LABELS[trigger.resource]+' '+resources[trigger.resource];const track=document.createElement('span');track.className='threshold-track';const fill=document.createElement('i');fill.style.width=resources[trigger.resource]+'%';const marker=document.createElement('b');marker.style.left=trigger.below+'%';marker.textContent=trigger.below;track.append(fill,marker);$('trigger').append(text,track);$('trigger').setAttribute('aria-label',RESOURCE_LABELS[trigger.resource]+' '+resources[trigger.resource]+', סף '+trigger.below);}else if(currentCard?.reason){$('trigger').hidden=false;$('trigger').textContent=currentCard.reason;}$('card').classList.toggle('notice',!!currentCard?.notice);}
+function draw(){layer.replaceChildren();for(const n of model.nodes){const count=model.count(n.id),ratio=count/(n.kind==='target'?n.need:n.initial/(n.readiness||1)),color=(n.kind==='target'&&count<n.need)?'#c58c3c':ratio>=.8?'#529779':ratio>=.45?'#d5a749':'#c56b60';const g=node('g',{'data-id':n.id,transform:`translate(${n.x} ${n.y})`,role:'button',tabindex:0,'aria-label':(n.reserve?'מילואים':n.kind==='target'?'יישוב':'כוח')+' '+count+(n.need?' מתוך '+n.need:'' )},layer);if(reveal&&reveal.id===n.id&&reveal.elapsed===0){g.setAttribute('transform',`translate(${n.x} ${n.y})`);g.setAttribute('opacity','0')}node('circle',{r:n.kind==='source'?27:23,fill:n.kind==='target'&&count<n.need?'#fffdf3':color,stroke:n.kind==='target'&&count<n.need?color:'#fff9e9','stroke-dasharray':n.kind==='target'&&count<n.need?'4 4':'none','stroke-width':3},g);const t=node('text',{'text-anchor':'middle',y:7,class:'number'},g);t.textContent=count;if(n.kind==='target'&&count<n.need)t.setAttribute('fill',color);if(n.kind==='target'&&count<n.need)t.style.fill=color;if(n.need){if(count<n.need){const warn=node('text',{x:26,y:-21,class:'alert'},g);warn.textContent='!'}}if(n.reserve){const label=node('text',{'text-anchor':'middle',y:51,class:'requirement'},g);label.textContent='מילואים'}const incoming=model.incoming(n.id);if(incoming){const t=node('text',{x:30,y:-23,class:'incoming'},g);t.textContent='+'+incoming}}
+}
+function reset(){epoch++;attack=null;$('attack')?.remove();svg.setAttribute('viewBox','0 0 420 740');$('end-stats').hidden=false;$('unit-info').hidden=true;$('tutorial')?.remove();equipment=new EquipmentModel();danger=new DangerModel();dangerWarning=false;reveal=null;flights.clear();paths.replaceChildren();$('aim').setAttribute('visibility','hidden');drag=null;phase=9;campaign=new CampaignClock();currentCard=null;ambientTime=0;$('prayer')?.remove();cardDrag=null;resources={money:80,support:75,unity:70};growthTarget='new';$('delta').hidden=true;model=new TransferModel(initialNodes);syncEquipment(model.nodes);draw();$('status').textContent='ינואר 2027 · שנה ראשונה';modal=false;$('card').hidden=true;setupAmbient();showCard('ראש הממשלה, האחריות בידיך','עליך להכתיב מדיניות לארבע השנים הקרובות ולשמור על הביטחון של כולם. החלטותיך ישפיעו על הכסף, הקשרים עם העולם ופריסת הכוחות. נתחיל בתרגול קצר. הכהונה נמשכת מינואר 2027 עד ינואר 2031.');updateCampaign(0)}
+function feedback(effect,done){effect=policyEffect(effect,model.nodes);modal=true;decision=false;const token=epoch;$('card').hidden=true;const changes=Object.entries(effect).filter(([k,v])=>v&&resources[k]!==Math.max(0,Math.min(100,resources[k]+v)));const box=$('delta');box.replaceChildren();for(const [key,value]of changes){const old=resources[key],next=Math.max(0,Math.min(100,old+value));resources[key]=next;const row=document.createElement('div');row.className='delta-row';const label=document.createElement('strong');label.textContent=RESOURCE_LABELS[key]+(next<old?' ↓':' ↑');const track=document.createElement('div');track.className='delta-track';const fill=document.createElement('div');fill.className='delta-fill';fill.style.height=old+'%';track.append(fill);row.append(label,track);box.append(row);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(token===epoch)fill.style.height=next+'%'}))}box.hidden=!changes.length;setTimeout(()=>{if(token!==epoch)return;box.hidden=true;modal=false;done();draw();checkResources()},changes.length?1000:180)}
+function applyOutcome(effect={}){const {money=0,support=0,unity=0}=effect;feedback({money,support,unity},()=>{phase=5;const id=applyCampaignEffects(model,effect);if(id){revealSite(id);$('status').textContent='דרישת האבטחה השתנתה · בדקו את הפריסה'}if(effect.withdraw)$('status').textContent='הנקודה פונתה · כוח האבטחה חזר למקורותיו';if(effect.prayer&&!$('prayer')){const g=node('g',{id:'prayer','pointer-events':'none'},svg);node('circle',{cx:145,cy:655,r:17,fill:'#30302e'},g);const t=node('text',{x:145,y:685,'text-anchor':'middle',class:'requirement'},g);t.textContent='תפילה · ללא כוח';}syncEquipment(model.nodes);currentCard=null;});}
+function resolveDecision(yes){if(!decision||!currentCard)return;const c=currentCard;decision=false;campaign.record(c,yes);applyOutcome(yes?c.yes:c.no);}
+$('okay').onclick=()=>{if(decision)return;if(phase===9){startTutorial();return}if(phase===6||phase===7){reset();return}if(currentCard)applyOutcome(currentCard.effect);};$('reset').onclick=reset;
+$('approve').onclick=()=>resolveDecision(true);$('decline').onclick=()=>resolveDecision(false);
+function position(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+svg.addEventListener('pointerdown',e=>{if(modal||drag||e.button>0)return;const target=e.target.closest('[data-id]');if(!target){$('unit-info').hidden=true;return}const n=model.get(target.dataset.id);if(!model.count(n.id)){showUnit(n.id);return;}e.preventDefault();$('unit-info').hidden=true;drag={id:e.pointerId,source:n.id,x:e.clientX,y:e.clientY};svg.setPointerCapture(e.pointerId);$('aim').setAttribute('d',`M${n.x} ${n.y}L${n.x} ${n.y}`);$('aim').setAttribute('visibility','visible')});
+svg.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const n=model.get(drag.source),p=position(e);$('aim').setAttribute('d',`M${n.x} ${n.y}L${p.x} ${p.y}`)});
+svg.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;const source=drag.source,tapped=Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8;drag=null;if(tapped){$('aim').setAttribute('visibility','hidden');showUnit(source);return;}$('aim').setAttribute('visibility','hidden');const p=position(e),to=model.nodes.find(n=>Math.hypot(p.x-n.x,p.y-n.y)<=34);if(!to)return;const f=model.send(source,to.id);if(!f){$('status').textContent='נדרשים לפחות שניים במקור; ייתכן שתגבור כבר בדרך או שנדרשים מילואים';return}startFlight(f);draw()});
+svg.addEventListener('pointercancel',()=>{drag=null;$('aim').setAttribute('visibility','hidden')});
+function startFlight(f){const a=model.get(f.from),b=model.get(f.to),g=node('g',{},paths);svg.append(paths);const dots=Array.from({length:Math.min(10,f.count)},()=>node('circle',{r:5,fill:'#174f47',stroke:'#fffdf5','stroke-width':1.2,cx:a.x,cy:a.y},g));flights.set(f.id,{f,a,b,g,dots,elapsed:0,duration:2400+Math.hypot(a.x-b.x,a.y-b.y)*1.5});$('status').textContent=f.count+' בדרך';}
+let last=performance.now();function animate(now){const dt=Math.min(1000,Math.max(0,now-last));last=now;if(document.hidden){requestAnimationFrame(animate);return}animateReveal(dt);animateAttack(dt);if(!modal){for(const [id,trip]of flights){trip.elapsed+=dt;trip.dots.forEach((dot,i)=>{const t=Math.max(0,Math.min(1,(trip.elapsed-i*35)/trip.duration));dot.setAttribute('cx',trip.a.x+(trip.b.x-trip.a.x)*t);dot.setAttribute('cy',trip.a.y+(trip.b.y-trip.a.y)*t)});if(trip.elapsed>=trip.duration+trip.dots.length*35){model.arrive(id);trip.g.remove();flights.delete(id);draw();$('status').textContent='אפשר להעביר כוח בין כל הנקודות'}}}if(phase===10&&!flights.size&&model.count('old1')>=model.get('old1').need){$('tutorial')?.remove();phase=5;$('status').textContent='האבטחה הושלמה · מתחילים';updateCampaign(0);}if(equipment.step(model.nodes,resources.money,dt/1000,modal||phase!==5))draw();updateDanger(dt/1000);updateCampaign(dt/1000);showEndStats();requestAnimationFrame(animate)}reset();requestAnimationFrame(animate);
+
+function updateDanger(seconds){
+ const active=!modal&&(phase===1||phase===3||phase===5);
+ const failed=danger.step(model.nodes,id=>model.count(id),seconds,!active);
+ for(const n of model.nodes){const g=layer.querySelector('[data-id="'+n.id+'"]');if(!g)continue;const pressure=danger.sites.get(n.id)?.pressure||0,shortage=!n.reserve&&(n.kind==='target'?model.count(n.id)<n.need:model.count(n.id)<n.initial*.45/(n.readiness||1));const circle=g.querySelector('circle');if(circle){circle.style.animation=shortage?'dangerPulse '+(2.4-1.2*pressure).toFixed(2)+'s ease-in-out infinite':'';}}
+ if(!active)return;
+ if(failed){startAttack(failed);return;}
+ const severe=[...danger.sites.values()].some(s=>s.pressure>=.5);
+ if(severe)$('status').textContent='סכנה מצטברת · תגברו את הנקודה המהבהבת';
+ else if(dangerWarning)$('status').textContent='הסכנה פוחתת · המשיכו לשמור על הפריסה';
+ dangerWarning=severe;
+}
+
+function updateCampaign(seconds){
+ const active=!modal&&phase===5;campaign.step(seconds,!active);
+ const date=new Date(Date.UTC(2027,0,1+Math.floor(campaign.day)));
+ $('calendar').textContent=dateFormatter.format(date)+(active?' · ▶':' · ❚❚');
+ if(active){ambientTime+=seconds;for(const dot of $('ambient').children){const i=Number(dot.dataset.i),cx=Number(dot.dataset.x),cy=Number(dot.dataset.y);dot.setAttribute('cx',cx+Math.sin(ambientTime*.55+i*2.3)*8);dot.setAttribute('cy',cy+Math.cos(ambientTime*.4+i)*7);}}
+ if(!active||drag||flights.size)return;
+ const context={nodes:model.nodes,resources,exposed:model.nodes.filter(n=>!n.reserve&&(danger.sites.get(n.id)?.pressure||0)>=.45&&(n.kind==='target'?model.count(n.id)<n.need:model.count(n.id)<n.initial*.45/(n.readiness||1)))};const c=campaign.next(key=>campaign.eligible(key,context),context);
+ if(c){currentCard=c;if(c.incidentTarget){startAttack(c.incidentTarget,c);return;}showCard(c.title,c.body,!!c.yes);return;}
+ if(campaign.day>=CAMPAIGN_END){phase=7;currentCard=null;showEndStats();showCard('ארבע שנות כהונה הושלמו','1 בינואר 2031. '+(campaign.state.recognition?'ערוץ ההסכם נשאר פתוח. ':'הכהונה הסתיימה ללא ערוץ הסכם פעיל. ')+settlementNodes(model.nodes).length+' נקודות התיישבות מאובטחות. '+campaign.state.soldiersKilled+' חיילים נהרגו; '+campaign.state.civiliansKilled+' אזרחים נהרגו בפיגועים. ההתחייבויות אינן נעלמות עם סוף הכהונה.');}
+}
+function setupAmbient(){let group=$('ambient');if(!group){group=node('g',{id:'ambient','pointer-events':'none','aria-hidden':'true'},svg);svg.insertBefore(group,$('aim'));}group.replaceChildren();const centers=[[267,146],[260,236],[262,398],[68,552],[91,604]];centers.forEach(([x,y],j)=>{for(let k=0;k<5;k++){const i=j*5+k;node('circle',{r:2.2,fill:'#b45046',opacity:.65,'data-i':i,'data-x':x+(k%3-1)*9,'data-y':y+(Math.floor(k/3)-.5)*10,cx:x,cy:y},group)}});}
+
+function showEndStats(){const sources=model.nodes.filter(n=>n.kind==='source'&&!n.reserve),coverage=Math.round(100*sources.reduce((s,n)=>s+Math.min(1,model.count(n.id)/(n.initial*.45/(n.readiness||1))),0)/sources.length);$('end-stats').textContent='כסף '+resources.money+' · תמיכה עולמית '+resources.support+' · אחדות העם '+resources.unity;$('end-stats').hidden=false;}
+function startAttack(id,incident=null){phase=8;modal=true;decision=false;drag=null;$('aim').setAttribute('visibility','hidden');$('card').hidden=true;const target=model.get(id),from={x:target.y>480?85:265,y:target.y>480?560:235};if(Math.hypot(from.x-target.x,from.y-target.y)<60)from.y-=85;const group=node('g',{id:'attack','pointer-events':'none'},svg);const route=node('path',{d:'M'+from.x+' '+from.y+'L'+target.x+' '+target.y,stroke:'#ab342d','stroke-width':2,'stroke-dasharray':'4 5',fill:'none'},group);const dots=Array.from({length:incident?2:9},()=>node('circle',{r:3.4,fill:'#b62826',cx:from.x,cy:from.y,opacity:0},group));const blast=node('circle',{cx:target.x,cy:target.y,r:0,fill:'#ef9c47',stroke:'#b8392e','stroke-width':3,opacity:0},group);attack={target,from,dots,blast,elapsed:0,incident};$('status').textContent='חדירה · התנועה האדומה מתקדמת אל היעד';}
+function animateAttack(dt){if(!attack)return;const a=attack;a.elapsed+=dt;const t=a.elapsed/1000,z=Math.min(1,t/.9),ease=z*z*(3-2*z),w=420/(1+1.1*ease),h=740/(1+1.1*ease);const x=Math.max(0,Math.min(420-w,(a.target.x+a.from.x)/2-w/2)),y=Math.max(0,Math.min(740-h,(a.target.y+a.from.y)/2-h/2));svg.setAttribute('viewBox',x+' '+y+' '+w+' '+h);a.dots.forEach((dot,i)=>{const p=Math.max(0,Math.min(1,(t-.9-i*.06)/1.8));dot.setAttribute('opacity',t>.9?1:0);dot.setAttribute('cx',a.from.x+(a.target.x-a.from.x)*p+Math.sin(i*2)*3);dot.setAttribute('cy',a.from.y+(a.target.y-a.from.y)*p+Math.cos(i*2)*3);});if(t>3.25){const b=Math.min(1,(t-3.25)/.9);a.blast.setAttribute('r',4+35*b);a.blast.setAttribute('opacity',1-b*.85);a.dots.forEach(d=>d.setAttribute('opacity',0));}if(t>=4.5){if(a.incident){$('attack')?.remove();svg.setAttribute('viewBox','0 0 420 740');phase=5;currentCard=a.incident;showCard(currentCard.title,currentCard.body,true);}else{phase=6;currentCard=null;campaign.state.civiliansKilled+=a.target.kind==='target'?24:38;showEndStats();showCard('מתקפה קטלנית','חמושים חדרו דרך גזרה שחסרה בה אבטחה. סך האזרחים שנהרגו בפיגועים בכהונה: '+campaign.state.civiliansKilled+'.');}attack=null;}}
+
+function startTutorial(){phase=10;modal=false;$('card').hidden=true;$('status').textContent='יש להעביר כוחות לשמירה על החווה החדשה ביו״ש';const g=node('g',{id:'tutorial','pointer-events':'none'},svg);const hand=node('text',{x:0,y:0,'font-size':28},g);hand.textContent='👆';node('animateMotion',{path:'M200 135 L296 197',dur:'2.4s',repeatCount:'indefinite'},hand);}
+function showUnit(id){const n=model.get(id),box=$('unit-info'),main=svg.parentElement.getBoundingClientRect(),point=svg.createSVGPoint();point.x=n.x;point.y=n.y;const p=point.matrixTransform(svg.getScreenCTM());box.textContent=(n.reserve?'עתודת מילואים':n.kind==='target'?siteName(n.id):'כוח')+'\nכוח: '+(model.count(id)*1000).toLocaleString('he-IL')+' חיילים\nסדיר: '+((model.count(id)-reserveCount(n))*1000).toLocaleString('he-IL')+' · מילואים: '+(reserveCount(n)*1000).toLocaleString('he-IL')+'\nמצב מורל: מצוין\nמצב ציוד: '+((n.readiness||1)>=.95?'מצוין':n.readiness>=.85?'טוב':n.readiness>=.75?'שחוק':'דל')+(n.reserve?'\nהעתודה אינה יעד לתקיפה':'');box.style.left=Math.max(8,Math.min(main.width-218,p.x-main.x-100))+'px';box.style.top=Math.max(82,Math.min(main.height-180,p.y-main.y+32))+'px';box.hidden=false;}
+
+
+function reserveCount(n){return n.troops.filter(t=>t.home==='reserve').reduce((s,t)=>s+t.count,0);}
+function siteName(id){return ({old1:'גבעת בערך',old2:'מעלה אישור',farm:'חוות עוד רגע',caravans:'נווה זמני',gaza:'חוף הבטחה',second:'חוות ליד',extension:'רמת רק הרחבה',tour:'שביל הטעימות','new-1':'מעלה בינתיים','new-2':'גבעת עוד קצת','new-3':'נווה סופית'})[id]||'נקודת אבטחה';}
+function checkResources(){if(phase!==6&&phase!==7&&campaign.state.civiliansKilled>=BALANCE.civilianLossLimit){phase=6;currentCard=null;showCard('הכהונה הסתיימה באסון','מספר האזרחים שנהרגו בפיגועים הגיע ל־'+campaign.state.civiliansKilled+'.');return;}const key=depletedResource(resources);if(!key||phase===6||phase===7)return;reveal=null;attack=null;phase=6;drag=null;currentCard=null;$('aim').setAttribute('visibility','hidden');showEndStats();showCard('הכהונה הסתיימה',({money:'הקופה התרוקנה. הממשלה אינה יכולה לממן את התחייבויותיה.',support:'התמיכה העולמית קרסה. ישראל נותרה מבודדת.',unity:'אחדות העם קרסה. הממשלה איבדה את היכולת להמשיך לתפקד.'})[key]);}
+</script></html>
