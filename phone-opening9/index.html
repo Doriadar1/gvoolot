@@ -1133,12 +1133,13 @@ function makeRegion(sector,index){
   const l=structuredClone(BASE_LEVELS[1]),gaza=sector==='gaza';
   const names=gaza?['צפון הרצועה · בית לאהיא','מרכז הרצועה · דיר אל־בלח','דרום הרצועה · חאן יונס']:['הרי שומרון · שכם','בקעת הירדן · יריחו','הר חברון · יטא'];
   l.name='שלב '+(index+1);l.region=names[index%3];l.sector=sector;l.tut=index===2?'tech':null;
-  l.mapScale=1.25+index*.125;l.enemySpeed=Math.min(88,62+index*3);l.eGrow=.6+index*.08;
-  l.ai=[Math.max(4,8-index*.45),Math.max(6,11-index*.4)];l.aiStart=8;l.aiMargin=3;l.aiFrac=.64;
+  l.mapScale=1.25+index*.125;l.enemySpeed=Math.min(78,56+index*3);l.eGrow=.5+index*.06;
+  l.ai=[Math.max(6,10-index*.45),Math.max(8,13-index*.4)];l.aiStart=10;l.aiMargin=3;l.aiFrac=.64;
   l.warnSettlement=30;l.warnRanch=38;l.boosters=['reserve','drone','tech'];
-  l.special={first:35,every:[Math.max(30,50-index*2),Math.max(40,65-index*2)],linger:6,up:3.6,down:1.2,n:5,speed:65+index*2,max:index>=5?2:1};
+  l.special={first:40,every:[Math.max(36,56-index*2),Math.max(46,72-index*2)],linger:6,up:3.6,down:1.2,n:5,speed:65+index*2,max:index>=5?2:1};
+  if(index===2)l.nodes=l.nodes.filter(n=>n.id!=='e5'&&n.id!=='e6');
   const shift=(index%3-1)*30;
-  l.nodes.forEach(n=>{n.sector=sector;n.x=clamp(n.x+shift,65,650);if(gaza)n.x=160+n.x*.73;if(n.owner==='E')n.t=Math.min(38,n.t+index);if(n.owner==='P')n.t=30;});
+  l.nodes.forEach(n=>{n.sector=sector;n.x=clamp(n.x+shift,65,650);if(gaza)n.x=160+n.x*.73;if(n.owner==='E')n.t=Math.min(34,n.t+Math.floor(index/2));if(n.owner==='P')n.t=30;});
   l.settlement={...l.settlement,title:gaza?'התיישבות חדשה · נווה חוף':'התיישבות חדשה · גבעת אור',sector};
   l.ranches=l.ranches.map((r,i)=>({...r,at:20+i*23,sector}));l.extraSlots=l.extraSlots.map(r=>({...r,sector}));
   l.villages=l.villages.map(v=>({...v,sector}));
@@ -1164,10 +1165,10 @@ function makeCombined(index){
 function buildCampaignWorlds(seed){
   const rng=mkRng(seed),first=structuredClone(BASE_LEVELS[0]),second=structuredClone(BASE_LEVELS[1]);
   first.sector='wb';second.sector='wb';second.settlement.title='התיישבות חדשה · גבעת אור';
-  second.enemySpeed=59;second.eGrow=.64;second.ai=[7,10];second.aiStart=9;second.aiFrac=.65;second.harassEvery=[24,32];second.harassStart=22;second.boosters=['reserve','drone','tech'];
-  second.nodes=second.nodes.filter(n=>n.id!=='e5'&&n.id!=='n4');
-  second.nodes.forEach(n=>{if(n.owner==='E')n.t=Math.max(12,n.t-3);if(n.owner==='P')n.t=40;});
-  second.ranches=second.ranches.slice(0,2).map((r,i)=>({...r,at:35+i*40}));second.special.first=28;second.special.every=[32,44];second.special.speed=52;
+  second.enemySpeed=54;second.eGrow=.5;second.ai=[9,13];second.aiStart=11;second.aiFrac=.62;second.harassEvery=[30,40];second.harassStart=28;second.boosters=['reserve','drone','tech'];
+  second.nodes=second.nodes.filter(n=>n.id!=='e5'&&n.id!=='e6'&&n.id!=='n4');
+  second.nodes.forEach(n=>{if(n.owner==='E')n.t=Math.max(12,n.t-5);if(n.owner==='P')n.t=40;});
+  second.ranches=second.ranches.slice(0,2).map((r,i)=>({...r,at:35+i*40}));second.special.first=34;second.special.every=[40,54];second.special.speed=48;
   first.nodes.forEach(n=>n.sector='wb');second.nodes.forEach(n=>n.sector='wb');
   LEVELS.splice(0,LEVELS.length,first,second,makeRegion('gaza',2),makeRegion(rng()>.5?'gaza':'wb',3),makeRegion(rng()>.5?'gaza':'wb',4),makeCombined(5),makeCombined(6),makeCombined(7));
   for(const key in terrainCache)delete terrainCache[key];
@@ -1602,7 +1603,7 @@ function finishCards(){saveMeta();if(LI<LEVELS.length-1)start(LI+1);else finishR
 
 // Input waits freeze simulation, including armies already in transit.
 function beginDeployment(){
- S.armies=[];S.playTime=0;S.boostHintDone=false;S.boostTutorial=false;
+ S.armies=[];S.playTime=0;S.deployShown=false;S.boostHintDone=false;S.boostTutorial=false;
  for(const s of S.sites){s.residents=Math.max(25,s.residents);if(s.kind==='settlement'){s.g.requiredGuard=s.policy?15:LI<2?15:LI<5?20:25;s.g.cap=Math.max(s.g.cap,s.g.requiredGuard);}}
  S.deployment=LV.tut==='basics'?null:S.sites.filter(s=>s.state==='up'&&s.kind==='settlement');S.deployTarget=null;
  for(const s of S.sites.filter(s=>s.state==='up')){s.g.troops=0;s.secured=false;s.warn=null;}
@@ -1614,7 +1615,8 @@ function deploymentStep(){
  if(!S.deployment)return false;
  const next=S.deployment.find(s=>s.g.troops<thr(s.g)||incomingP(s.g)>0);
  if(!next){S.deployment=null;S.deployTarget=null;S.frozen=false;S.hand=null;hideGeneral();S.camTo={x:W/2,y:H/2,z:1};return false;}
- if(next!==S.deployTarget){S.deployTarget=next;S.frozen=true;S.hand=()=>({a:fieldP().filter(n=>n.sector===next.g.sector&&avail(n)>0).sort((a,b)=>dist(a,next.g)-dist(b,next.g))[0],b:next.g});S.camTo={x:W/2,y:H/2,z:1};say('קודם מגינים על היישוב. גרור '+thr(next.g)+' לוחמים לנקודת השמירה.');}
+ if(next!==S.deployTarget&&S.deployShown){S.deployTarget=next;S.frozen=true;S.hand=null;hideGeneral();if(!S.deployMore){S.deployMore=true;toast('אבטחו גם את שאר היישובים','warn');}}
+ if(next!==S.deployTarget){S.deployShown=true;S.deployMore=false;S.deployTarget=next;S.frozen=true;S.hand=()=>({a:fieldP().filter(n=>n.sector===next.g.sector&&avail(n)>0).sort((a,b)=>dist(a,next.g)-dist(b,next.g))[0],b:next.g});S.camTo={x:W/2,y:H/2,z:1};say('קודם מגינים על היישוב. גרור '+thr(next.g)+' לוחמים לנקודת השמירה.');}
  return true;
 }
 function startCinematic(kind,q,site=null){
@@ -1677,7 +1679,21 @@ function spaceMapPoints(){
   const horizontal=(minX-Math.abs(dx))<(minY-Math.abs(dy));const move=(horizontal?minX-Math.abs(dx):minY-Math.abs(dy))/2+.2;
   for(const[n,dir]of[[a,-1],[b,1]]){if(horizontal)n.x=clamp(n.x+dir*(Math.sign(dx)||1)*move,sectorMin(n),sectorMax(n));else n.y=clamp(n.y+dir*(Math.sign(dy)||1)*move,75*k,BORDER_Y-50*k);}
  }
- for(const s of S.sites){if(s.kind==='ranch'){s.x=s.g.x;s.y=s.g.y+100*k;}else {s.x=s.g.x;s.y=s.g.y+145*k;} }
+ const placeSites=()=>{for(const s of S.sites){if(s.kind==='ranch'){s.x=s.g.x;s.y=s.g.y+100*k;}else {s.x=s.g.x;s.y=s.g.y+145*k;} }};
+ placeSites();
+ // Neutral, enemy and base points must never sit inside a settlement or farm area.
+ for(let pass=0;pass<40;pass++){let moved=false;
+  for(const s of S.sites)for(const n of S.nodes){
+   if(n.kind==='guard'||n.sector!==s.g.sector)continue;
+   const big=s.kind==='settlement',cy=big?s.y-20:s.y,rx=(big?150+34:64+14)+n.r+18,ry=Math.max(30,cy-s.g.y)+(big?34:14)+n.r+18;
+   let dx=n.x-s.x,dy=n.y-cy;const e=(dx/rx)**2+(dy/ry)**2;if(e>=1)continue;
+   if(!dx&&!dy)dx=1;const f=1/Math.sqrt((dx/rx)**2+(dy/ry)**2)+.02;
+   let nx=s.x+dx*f,ny=cy+dy*f;
+   if(nx<sectorMin(n)||nx>sectorMax(n)){nx=clamp(nx,sectorMin(n),sectorMax(n));const left=1-((nx-s.x)/rx)**2;if(left>0)ny=cy+(dy<0?-1:1)*ry*Math.sqrt(left)*1.02;}
+   n.x=nx;n.y=clamp(ny,75*k,BORDER_Y-50*k);moved=true;
+  }
+  if(!moved)break;
+ }
 }
 
 function refreshArmies(){
