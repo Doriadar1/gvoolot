@@ -1,0 +1,1813 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gvoolt Farms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Karantina:wght@400;700&family=Rubik:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: portrait 9:16 map stacked over a booster bar, letterboxed on a dark field; HUD, the general's briefing and dialogs float over the map. Single dark look by choice. */
+:root{
+  --field:#1c1a15;
+  --bar:#26231c; --bar-edge:#3a352a;
+  --ink:#f4efe2; --ink-dim:#c4bba3;
+  --panel:rgba(28,26,21,.93);
+  --player:#6b7a3a; --player-dark:#343d18;
+  --enemy:#c43b2c;  --enemy-dark:#7a1c12;
+  --neutral:#efe8d8; --neutral-dark:#8a826d;
+  --special:#3a1844;
+  --roof:#e2762b;   --warn:#f2b51d; --drone:#9fd3c7; --tech:#7fe0ff;
+  --f-display:"Karantina","Rubik",system-ui,sans-serif;
+  --f-body:"Rubik",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}
+[hidden]{display:none!important}
+body{background:var(--field);color:var(--ink);font-family:var(--f-body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#stage{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#wrap{position:relative;box-shadow:0 0 60px rgba(0,0,0,.5)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:absolute;inset:0 0 auto 0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:10px 14px;pointer-events:none;direction:rtl}
+.chip{background:var(--panel);border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:center}
+.chip small{font-weight:500;color:var(--ink-dim);font-size:12px}
+#hud button{pointer-events:auto}
+button{font-family:var(--f-body);font-weight:700;border:0;cursor:pointer;color:var(--ink);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:13px}
+button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+#toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--panel);padding:7px 16px;border-radius:10px;font-weight:700;font-size:14px;direction:rtl;white-space:nowrap;pointer-events:none;transition:opacity .25s;opacity:0}
+#toast.warn{color:var(--warn)} #toast.bad{color:#ff8a7a} #toast.good{color:var(--drone)}
+
+/* the general's briefing */
+#general{position:absolute;top:50px;inset-inline:10px;display:flex;gap:10px;align-items:flex-start;direction:rtl;pointer-events:none}
+#general .face{flex:none;width:68px;height:68px;border-radius:50%;background:#4d5a34;border:3px solid var(--warn);overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#general .bubble{position:relative;background:#f6f0df;color:#24211a;border-radius:14px;padding:9px 13px 10px;font-size:15px;line-height:1.4;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,.4);min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+#general .who{font-family:var(--f-display);font-size:22px;line-height:.8;font-weight:700;color:#5b4a1d}
+#general button{pointer-events:auto;align-self:flex-start;background:#4f5a2a;color:#fff;font-size:14px;padding:6px 18px}
+#general.pop{animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}}
+
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,18,14,.62);padding:16px;direction:rtl}
+.card{background:var(--panel);border-radius:16px;padding:22px 22px 20px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);max-height:100%;overflow:auto;box-sizing:border-box}
+.card h1{font-family:var(--f-display);font-weight:700;font-size:72px;line-height:.8;margin:0;letter-spacing:.02em}
+.card h2{font-family:var(--f-display);font-weight:700;font-size:56px;line-height:.85;margin:0}
+.card p{margin:0;color:var(--ink-dim);font-size:14px;line-height:1.45}
+.levels{display:grid;gap:10px;margin-top:4px}
+.big{background:#4f5a2a;font-size:16px;padding:12px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.big span{font-family:var(--f-display);font-size:30px;line-height:.9;font-weight:700}
+.big small{font-weight:500;font-size:12px;color:#e3e8c8}
+.big.mid{background:#7a5a12}.big.mid small{color:#f3e2b8}
+.big.alt{background:#7a1c12}.big.alt small{color:#f2cfc8}
+.ghost{background:transparent;border:2px solid var(--bar-edge);font-size:15px;padding:10px;border-radius:12px}
+#endBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* booster bar */
+#bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 12px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));background:var(--bar);border-top:2px solid var(--bar-edge);box-sizing:border-box;direction:rtl}
+#bar.hint{animation:hint 1s ease-in-out infinite alternate}
+@keyframes hint{to{background:#3d3726}}
+.boost{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:84px;border-radius:14px;background:#332f25;border:2px solid #4a4434;padding:6px 4px;overflow:hidden;color:var(--ink)}
+.boost svg{width:34px;height:34px}
+.boost .name{font-family:var(--f-display);font-size:28px;line-height:.85;font-weight:700;letter-spacing:.02em}
+.boost .sub{font-size:11px;font-weight:500;color:var(--ink-dim)}
+.boost.ready{border-color:var(--warn);box-shadow:0 0 0 2px rgba(242,181,29,.25) inset}
+.boost.ready:active{transform:scale(.96)}
+.boost .cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;background:conic-gradient(rgba(20,18,14,.8) var(--p,0%),rgba(20,18,14,.4) 0)}
+.boost.locked{opacity:.5;cursor:default}
+.boost.locked svg{filter:grayscale(1)}
+.boost svg.lock{position:absolute;top:6px;inset-inline-start:8px;width:16px;height:16px}
+.boost:not(.locked) svg.lock{display:none}
+.boost.on{border-color:var(--tech);box-shadow:0 0 16px rgba(127,224,255,.5)}
+.hold{display:flex;flex-direction:column;gap:6px}
+.holdHead{display:flex;justify-content:space-between;font-weight:700;font-size:15px}
+.holdHead b{font-variant-numeric:tabular-nums;color:#dfe6b8}
+.meter{height:16px;border-radius:999px;background:#3a352a;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9aa95c,#6b7a3a);border-radius:999px;transition:width 1.4s ease-out}
+.paper{background:#efe6cf;color:#1f1b14;border-radius:3px;padding:14px 16px;font-family:"Frank Ruhl Libre",Georgia,serif;box-shadow:0 2px 0 #c9bd9c,0 8px 20px rgba(0,0,0,.4);transform:rotate(-1.2deg);display:flex;flex-direction:column;gap:6px}
+.paper .kicker{font-family:var(--f-body);font-weight:800;font-size:12px;letter-spacing:.06em;background:#1f1b14;color:#efe6cf;align-self:flex-start;padding:2px 8px}
+.paper h3{margin:0;font-size:22px;line-height:1.2;font-weight:900}
+.paper p{margin:0;color:#3a3226;font-size:15px;line-height:1.45;font-weight:700}
+.paper .zl{font-size:13px;color:#6b5f4a}
+#budgetGo{position:absolute;top:120px;left:50%;transform:translateX(-50%);min-width:180px}
+.dcard{background:#f6f0df;color:#24211a;border-radius:18px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 40px rgba(0,0,0,.5);box-sizing:border-box}
+.dcard.pop{animation:pop .35s ease-out}
+.dcard .who{display:flex;gap:12px;align-items:center}
+.dcard .ava{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none}
+.dcard b{display:block;font-family:var(--f-display);font-size:32px;line-height:.9}
+.dcard small{color:#6b604a;font-size:13px}
+.dcard p{margin:0;font-size:18px;line-height:1.45;font-weight:500}
+.choices{display:grid;gap:8px}
+.choices button{background:#4f5a2a;color:#fff;border-radius:12px;padding:10px 12px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.choices button.alt{background:#7a1c12}
+.choices button span{font-size:12px;font-weight:500;opacity:.85}
+.dcard .count{text-align:center}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}.meter i{transition:none}.dcard.pop{animation:none}.boost.ready:active{transform:none}#bar.hint,#general.pop{animation:none}}
+/* Campaign surfaces keep the prototype's warm paper and olive palette. */
+#budgetScreen #budgetGo{position:static;transform:none;min-width:0;width:100%;flex-shrink:0}
+#budgetScreen .budget-sheet{height:100%;min-height:0}
+#budgetScreen .folders{flex:1;min-height:0;overflow-y:auto;align-content:start;grid-auto-rows:116px;padding:8px 2px;scrollbar-width:thin}
+#budgetScreen .money-zone{flex-shrink:0}
+#budgetScreen .money-pile{width:45px;min-width:45px;padding:4px!important}
+#budgetScreen .money-pile b{font-size:17px}
+#budgetScreen .money-pile small{font-size:8px}
+#zoomIn,#zoomOut{padding:3px 9px;font-size:16px}
+.overlay{box-sizing:border-box;z-index:10}.overlay .card{max-height:100%}
+#startScreen .levels{grid-template-columns:repeat(2,1fr);gap:7px}.levels .big{padding:8px}.levels .big span{font-size:25px}.levels .big small{font-size:10px}
+.campaign-sheet{width:100%;max-width:440px;max-height:100%;overflow:auto;box-sizing:border-box;border-radius:22px;background:#f4eddb;color:#302d23;padding:18px;box-shadow:0 12px 44px #0008;direction:rtl}
+.campaign-sheet h2{font:700 44px/.95 var(--f-display);margin:0 0 10px}.campaign-sheet h3{margin:8px 0;font-size:18px}.campaign-sheet p{font-size:13px;line-height:1.5;margin:8px 0;color:#655e4a}
+.campaign-sheet button{background:#617442;color:#fff}.campaign-sheet .ghost{color:#514d3d;background:transparent;border-color:#c4b99c}.campaign-sheet .primary{width:100%;padding:12px;border-radius:12px;font-size:16px;background:#697c43;box-shadow:0 4px 0 #405024}
+.eyebrow{font-size:10px;letter-spacing:.07em;color:#827657;font-weight:800}.hero-win{text-align:center;padding:0 0 18px;overflow:hidden}.hero-win img{display:block;width:100%;aspect-ratio:1.5;object-fit:cover}.hero-win h2{font-size:58px;margin:18px 0 8px}.hero-win button{width:85%!important}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.stat-grid>div{border-radius:12px;padding:10px;background:#e6ddc7;font-size:11px}.stat-grid b{display:block;font-size:25px;margin-bottom:3px}.territory-row{margin:10px 0}.territory-row b{float:left}.territory-row .meter{background:#d5cab0;margin-top:6px;height:12px}.territory-row .meter i{background:#78884e}
+.paper-sheet{border-radius:3px;background:#efe5ce;padding:19px;font-family:'Frank Ruhl Libre',serif;color:#28251f}.paper-sheet h2{font:900 46px/1 'Frank Ruhl Libre',serif;text-align:center;border-block:3px double #4b4434;padding:8px 0}.paper-sheet article{border-bottom:1px solid #b3a88e;padding:9px 0}.paper-sheet article h3{font-size:21px;margin:0 0 5px}.paper-sheet article p{font:700 14px/1.45 'Frank Ruhl Libre',serif;color:#4a4437}.paper-sheet .obituary{background:#ded3b9;padding:12px;margin:10px 0}.paper-sheet .obituary strong{background:#2d2a24;color:#efe5ce;padding:3px 8px;display:inline-block}.paper-sheet small{font:10px var(--f-body);color:#746c5a}
+#budgetScreen{padding:10px}.budget-sheet{padding:15px;display:flex;flex-direction:column;gap:9px}.budget-sheet h2{font-size:36px;margin:0}.budget-hint{font-size:11px;color:#756847}.folders{display:grid;grid-template-columns:1fr 1fr;gap:11px 8px;padding-top:7px}.folder{position:relative;border:2px solid #c9b993;border-radius:3px 12px 12px 12px;padding:9px 8px 6px;background:linear-gradient(#efe3c4,#e7d6ac);min-height:76px;box-sizing:border-box;cursor:pointer;touch-action:none}.folder:before{content:'';position:absolute;top:-7px;right:-2px;width:43%;height:10px;border:2px solid #c9b993;border-bottom:0;border-radius:7px 7px 0 0;background:#eadcba}.folder .folder-head{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800}.folder .folder-icon{font-size:24px}.folder .funding{font-size:12px;margin-top:5px;display:flex;justify-content:space-between}.folder .meter{height:7px;background:#cfbd95;margin:4px 0}.folder .meter i{background:#7c9557;transition:width .25s}.folder small{display:block;font-size:9px;color:#786543;min-height:20px}.folder.selected{outline:3px solid #e6ae38}.folder.target{transform:scale(1.03);border-color:#859c52}.folder-controls{display:flex;gap:5px;justify-content:flex-end}.folder-controls button{padding:0;width:23px;height:20px;background:#d6c397;color:#4b422e;border-radius:5px;font-size:14px}
+.money-zone{border-top:1px dashed #c8bb9d;padding-top:8px;margin-top:auto}.money-header{display:flex;justify-content:space-between;font-size:12px}.money-piles{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:8px 0;min-height:52px}.money-pile{position:relative!important;border-radius:8px!important;background:#cfad53!important;border:2px solid #efd489!important;box-shadow:0 4px 0 #a37b2b;color:#382f1a!important;min-width:52px;padding:5px!important;touch-action:none;cursor:grab;user-select:none}.money-pile b{display:block;font-size:19px}.money-pile small{font-size:9px}.money-pile.usa{background:#7895a1!important;border-color:#b3d0d7!important;box-shadow:0 4px 0 #466472;color:#fff!important}.money-pile.selected{outline:3px solid #916821;transform:translateY(-5px)}.aid-notice{background:#e2d7bd;padding:8px;border-radius:9px;font-size:11px;line-height:1.4}.budget-sheet .primary:disabled{opacity:.4;cursor:default}
+#cardScreen{background:#242519ed;padding:14px}.decisions{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;max-width:400px;max-height:100%;color:#f3ead2;direction:rtl;gap:10px}.nation-meters{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;text-align:center}.nation-stat .stat-icon{display:block;height:34px;font-size:28px}.nation-stat svg{height:34px;width:34px}.nation-stat .meter{height:5px;background:#595c42;margin:4px 0}.nation-stat .meter i{background:#d5c58a;transition:width .35s}.nation-stat small{font-size:10px;color:#c9c0a4}.nation-stat .delta{font-size:11px;min-height:13px;color:#f0ce73;display:block}.nation-stat.danger .meter i{background:#d87355}
+#cText{font-size:clamp(14px,2vh,18px);line-height:1.45;text-align:center;min-height:64px;margin:0;max-width:340px}.deck{position:relative;width:72%;max-width:275px;aspect-ratio:1/.98;flex-shrink:1;min-height:120px;perspective:900px}.card-back,.portrait-card{position:absolute;inset:0;border:5px solid #e9dfc2;border-radius:18px;box-shadow:0 8px 20px #0005}.card-back{background:repeating-linear-gradient(45deg,#78805a 0 7px,#676f4d 7px 13px)}.card-back:nth-child(1){transform:rotate(-8deg) translate(-8px,4px)}.card-back:nth-child(2){transform:rotate(6deg) translate(7px,2px)}.card-back:nth-child(3){transform:rotate(-3deg)}.portrait-card{background:#dccba4;overflow:hidden;touch-action:none;cursor:grab;transform-origin:50% 90%;transition:transform .22s ease,opacity .22s}.portrait-card.dragging{transition:none}.portrait-card.dealing{animation:turn-card .9s both}.portrait-card svg{display:block;width:100%;height:100%}.swipe-stamp{position:absolute;top:14px;inset-inline:10px;text-align:center;padding:8px;border:3px solid currentColor;border-radius:8px;font-size:20px;font-weight:800;background:#f4efdde8;color:#506a34;opacity:0;pointer-events:none}.swipe-stamp.no{color:#9a4938}.character-name{text-align:center}.character-name b{display:block;font:700 30px/1 var(--f-display)}.character-name small{font-size:11px;color:#bdb499}.decision-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.decision-choices button{white-space:normal;background:#4e5e34;border:1px solid #778451;border-radius:12px;min-height:49px;font-size:13px}.decision-choices button:last-child{background:#554439;border-color:#806351}.swipe-hint{font-size:10px;color:#bab398}.deck-intro{position:absolute;inset:0;display:grid;place-items:center;font:700 46px var(--f-display);background:#707a4f;color:#eee2bd;border-radius:13px;pointer-events:none}.decisions .count{font-size:11px;color:#c5bc9d}.card-progress{display:flex;gap:5px}.card-progress i{width:22px;height:4px;background:#535940;border-radius:3px}.card-progress i.done{background:#d8c789}
+@keyframes turn-card{0%,40%{transform:rotateY(180deg) scale(.94)}100%{transform:rotateY(0)}}
+.iran-sheet{background:#421e20;color:#ffe9de;text-align:center}.iran-sheet p{color:#e0b9ac}.iran-map{width:100%;max-height:340px;aspect-ratio:1.1}.iran-sheet .placeholder{background:#6a3331;color:#ffdcc2;padding:7px;border-radius:7px;font-size:11px}.iran-stats{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.iran-stats span{background:#642c2b;border-radius:9px;font-size:11px;padding:7px}.impact-panel{align-self:flex-end;width:100%;background:#391d16eb;border:2px solid #db9e5a;color:#ffefd8;padding:15px;border-radius:15px;direction:rtl}.impact-panel h2{margin:0;font:700 38px var(--f-display)}.impact-panel p{font-size:14px;line-height:1.45}.impact-panel button{background:#cd9e5b;color:#35271b;width:100%;padding:10px}#impactScreen{background:transparent;align-items:flex-end;pointer-events:none}#impactScreen .impact-panel{pointer-events:auto}
+.leader-tabs{display:flex;gap:6px;margin:12px 0}.leader-tabs button{flex:1;background:#d4c8aa;color:#494331;border-radius:8px;font-size:11px}.leader-tabs button.active{background:#6d7d4c;color:white}.leader-table{width:100%;font-size:11px;border-collapse:collapse;text-align:right}.leader-table td,.leader-table th{padding:7px 4px;border-bottom:1px solid #d1c6ac}.run-years{font:700 56px var(--f-display);color:#667643}.local-note{font-size:10px!important;color:#867d66!important}.new-game-actions{display:flex;gap:8px;margin-top:13px}.new-game-actions button{flex:1;border-radius:10px;padding:10px}
+#general .face{border-color:#d6b557;box-shadow:0 4px 0 #0003}#general .bubble{border:2px solid #dfcea5;box-shadow:0 5px 0 #0002;border-radius:18px}#general .who{color:#748047}#general button{border-radius:10px;box-shadow:0 3px 0 #293821}
+#bar{gap:7px;padding:9px;grid-template-columns:repeat(3,1fr);background:#383b28;border-color:#596041}#bar.has-cluster{grid-template-columns:repeat(4,1fr)}.boost{background:linear-gradient(#647149,#4a5834);border:2px solid #889661;border-radius:17px;box-shadow:0 4px 0 #202816;overflow:visible;height:82px}.boost .name{font-size:25px}.boost .sub{color:#e0ddc1;font-size:10px}.boost .cd{border-radius:14px}.boost.locked{opacity:.5;box-shadow:0 4px 0 #232619}.boost .stock{position:absolute;left:-4px;top:-6px;min-width:23px;height:23px;border-radius:50%;background:#ead090;color:#4c4124;border:2px solid #fff0c9;display:grid;place-items:center;font-size:12px}.boost.empty{filter:grayscale(.8)}.boost .lock{right:3px;top:2px!important}.source-info{font-size:10px;line-height:1.4;color:#aba48e}.source-info a{color:#dec993}#campaignStatus{font-size:10px;background:#282b1dec;padding:5px 8px;border-radius:7px;color:#ded8c4}#hud{gap:5px;flex-wrap:wrap}
+@media(max-height:740px){.campaign-sheet{padding:12px}.folders{gap:9px 6px}.folder{min-height:66px;padding:6px}.folder small{font-size:8px;min-height:16px}.folder .folder-icon{font-size:18px}.folder .folder-head{font-size:11px}.budget-sheet{gap:6px}.budget-sheet h2{font-size:30px}.decisions{gap:6px}.nation-stat .stat-icon{height:26px;font-size:24px}.nation-stat svg{height:26px}.deck{width:58%}#cText{min-height:48px;font-size:14px}.hero-win h2{font-size:46px}.iran-map{max-height:250px}}
+@media(prefers-reduced-motion:reduce){.portrait-card.dealing{animation:none}.portrait-card,.nation-stat .meter i{transition:none}}
+/* Approved warm cartoon direction: only icons, prompt and portrait. */
+body{touch-action:auto}canvas{touch-action:none}.campaign-sheet{touch-action:pan-y}#cardScreen{background:#34382a!important}
+#cardScreen{background:#34382af5;padding:28px 22px}.decisions{height:100%;justify-content:center;gap:0}.nation-meters{display:flex;direction:ltr;justify-content:space-around;width:85%;margin-bottom:32px}.nation-stat{position:relative}.nation-stat svg{width:40px;height:44px}.effect-dot{position:absolute;top:-12px;left:17px;width:6px;height:6px;background:#e9d79c;border-radius:50%}#cText{font-size:18px;line-height:1.65;min-height:85px;margin-bottom:22px;display:flex;align-items:center;justify-content:center}.deck{width:88%;max-width:310px;aspect-ratio:1;min-height:0;flex-shrink:0}.card-back:nth-child(1){transform:rotate(4deg);background:#a0a685}.portrait-card,.card-back{border:6px solid #e9dfc2;border-radius:20px}.portrait-card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}.swipe-stamp{font-size:17px}.portrait-card.dealing{animation:deal-warm .35s both}@keyframes deal-warm{from{transform:translateY(30px) rotate(-5deg);opacity:0}to{transform:none;opacity:1}}
+.territory-row .meter{display:flex;direction:rtl;overflow:hidden}.territory-row .meter i{display:block;height:100%;flex-shrink:0}.territory-row .meter .held{background:#78884e}.territory-row .meter .gained{background:#d9aa46;border-inline-start:2px solid #f9e8bb;box-sizing:border-box}.territory-row .meter::after{content:'';flex:1}
+.paper-sheet{background:#ece3cd;border-radius:1px;padding:17px}.paper-sheet h2{font-size:52px;border-top:5px solid #332c20;border-bottom:2px solid #332c20;margin-top:8px;padding:10px 0}.paper-sheet #paperDate{display:block;text-align:center;font:10px Rubik}.paper-sheet #newsArticles{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.paper-sheet article{padding:9px 0}.paper-sheet article.lead{grid-column:1/-1}.paper-sheet article img{width:100%;height:95px;object-fit:cover;filter:sepia(.5) saturate(.55);mix-blend-mode:multiply}.paper-sheet article.lead img{height:160px}.paper-sheet article.lead h3{font-size:27px}.paper-sheet article p{font:400 13px/1.4 'Frank Ruhl Libre',serif;margin:4px 0}.paper-sheet article h3{font-size:20px;line-height:1.1;margin:7px 0}.paper-sheet .obituary{background:transparent;border:2px solid #3f392a;padding:8px}.paper-sheet .obituary strong{background:none;color:#302b20;font:900 19px 'Frank Ruhl Libre'}.paper-sheet>small:last-of-type{font-size:9px}.run-years{font-size:34px;line-height:1.2}
+#budgetScreen{padding:6px}.budget-sheet{padding:12px;gap:5px;max-width:500px}.budget-sheet .eyebrow{display:none}.budget-hint{font-size:10px}.budget-map{position:relative!important;display:block!important;isolation:isolate;background:#d8d3ac;border:1px solid #b8b28b;border-radius:15px;padding:0!important;min-height:180px!important;overflow:auto!important}.budget-terrain{height:var(--map-height);background:radial-gradient(ellipse at 30% 25%,#99a77355 0 15%,transparent 15.5%),radial-gradient(ellipse at 75% 65%,#84926355 0 24%,transparent 24.5%),repeating-radial-gradient(ellipse at 25% 20%,transparent 0 31px,#8b8a6429 32px 33px,transparent 34px 44px);width:100%}.budget-terrain:after{content:'';position:absolute;width:40%;height:var(--map-height);left:25%;border-right:9px double #bbae83;border-radius:50%;transform:rotate(15deg)}#budgetScreen .folder{position:absolute;margin-left:-46px;width:92px;height:96px;min-height:0;padding:0;border:0;background:none;box-shadow:none;text-align:center;touch-action:none;z-index:1;--status:#b34e36}#budgetScreen .folder:before{display:none}.folder.medium{--status:#c6a439!important}.folder.high{--status:#6c8a42!important}#budgetScreen .folder-icon{display:block;position:absolute;font-size:25px;left:52px;top:-13px;filter:drop-shadow(0 2px 0 #fff7)}.budget-dot{display:grid;place-items:center;margin:auto;width:51px;height:51px;border:4px solid var(--status);outline:3px solid #f0e6c5;background:#f5edcf;color:#302b22;border-radius:50%;font-size:24px;box-shadow:0 4px 0 #29291a40}.folder-name{display:block;border-radius:5px;background:#36372bdd;color:#fff5d9;margin-top:8px;padding:3px 2px;font-size:11px;font-weight:700;white-space:nowrap}.budget-need{font-size:9px;display:block;color:#494535;margin-top:3px}.money-zone{border-top:0;padding-top:2px}.money-header{font-size:10px}#budgetScreen .money-piles{gap:9px;min-height:40px;margin:6px 0}#budgetScreen .money-pile{background:none!important;box-shadow:none;border:0!important;min-width:32px;width:32px;height:42px;padding:0!important;color:#4b3b20!important;z-index:3}.coins{position:absolute;left:3px;right:3px;top:5px;bottom:12px}.coins i{position:absolute;left:0;width:28px;height:12px;border-radius:50%;background:#edc867;border:2px solid #a47b2d;box-shadow:0 3px 0 #b28936}.money-pile.usa .coins i{background:#b0c2b0;border-color:#648279;box-shadow:0 3px 0 #647e70}#budgetScreen .money-pile b{position:relative;top:7px;font-size:12px;text-shadow:0 1px #fff9}#budgetScreen .money-pile small{position:absolute;bottom:0;left:0;right:0;font-size:8px}.flying-coin{position:fixed;z-index:99999;pointer-events:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#efd17a;border:2px solid #b28c34;box-shadow:0 2px 0 #87652a;color:#836227;font:bold 12px Arial}.aid-notice{font-size:10px;padding:4px}
+@media(max-height:740px){#cardScreen{padding:15px}.nation-meters{margin-bottom:18px}.nation-stat svg{width:32px;height:34px}#cText{font-size:15px;min-height:70px;margin-bottom:14px}.deck{width:76%;max-width:260px}.paper-sheet article.lead img{height:115px}.budget-sheet h2{font-size:29px}.budget-sheet .primary{padding:9px;font-size:13px}}
+/* Budget orders use the map's stationary source and directional arrow. */
+#moneyArrow{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9990;overflow:visible}#moneyArrow>path{fill:none;stroke-linecap:round}.arrow-shadow{stroke:#3d382887;stroke-width:9}.arrow-line{stroke:#fff2c9;stroke-width:4;stroke-dasharray:9 8;animation:money-route .7s linear infinite}@keyframes money-route{to{stroke-dashoffset:-17}}
+#budgetScreen .folder{width:102px;height:110px;margin-left:-51px}.budget-ring{display:block;position:relative;width:80px;height:80px;margin:auto}.budget-ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.budget-ring circle{fill:none;stroke-width:7}.ring-track{stroke:#fff8e6}.ring-progress{stroke:var(--status);transform:rotate(-90deg);transform-origin:40px 40px;stroke-linecap:round;transition:stroke-dasharray .4s,stroke .3s}.budget-ring .budget-dot{position:absolute;inset:12px;width:56px;height:56px;border:1px solid #a89b72;outline:0;font-size:27px;background:#f6edce;box-shadow:inset 0 2px 1px #fff8;z-index:-1}.folder.target .budget-ring{filter:drop-shadow(0 0 5px #fff3c8)}.folder.target{transform:none!important}.folder-name{margin-top:5px}#budgetScreen .folder-icon{left:69px;top:-7px;z-index:2}.budget-need{display:none}
+#budgetScreen .money-piles{gap:9px;min-height:62px}#budgetScreen .money-pile{width:55px;min-width:55px;height:59px;border-radius:50%!important}#budgetScreen .money-pile .coins{inset:0 2px 7px}.money-pile .coins i{width:49px;height:43px;border-width:3px;box-shadow:0 4px 0 #a58035}.money-pile.usa .coins i{box-shadow:0 4px 0 #647e70}#budgetScreen .money-pile b{top:0;font-size:23px;line-height:45px;display:block}#budgetScreen .money-pile small{bottom:-2px;font-size:8px}.money-pile.selected{transform:none!important;outline:0;filter:drop-shadow(0 0 5px #fff6bd)}
+.decisions{justify-content:flex-start;padding-top:9px;box-sizing:border-box}.requests-title{font:700 34px/1 var(--f-display);margin:0 0 24px;text-align:center}.nation-meters{margin-bottom:24px}.nation-stat svg{width:44px;height:48px;overflow:visible}.icon-fill{transition:transform .65s cubic-bezier(.18,.8,.18,1),fill .35s}.nation-stat{transition:filter .3s}.nation-stat.meter-preview svg{animation:meter-rise 1s ease-in-out infinite}.nation-stat.meter-preview.meter-down svg{animation-name:meter-fall}.nation-stat .effect-dot{transition:opacity .2s;left:19px}#cText{min-height:90px;margin-bottom:18px}.deck{max-width:290px;width:86%}.request-progress{position:relative;display:flex;justify-content:space-between;width:110px;height:13px;margin-top:27px;flex-shrink:0;direction:ltr}.request-progress::before,.request-progress::after{content:'';position:absolute;left:0;top:5px;height:3px;background:#666c4e;width:100%}.request-progress::after{width:var(--done);background:#e1d59e;transition:width .4s}.request-progress i{position:relative;z-index:1;width:11px;height:11px;box-sizing:border-box;border:2px solid #838869;background:#34382a;border-radius:50%;transition:background .3s,transform .3s}.request-progress i.done{background:#e1d59e;border-color:#e1d59e}.request-progress i.current{border-color:#f3e6b9;transform:scale(1.25);box-shadow:0 0 8px #e1d59e66}
+@keyframes meter-rise{50%{transform:translateY(-6px) scale(1.13);filter:drop-shadow(0 3px 6px #e6d79755)}}@keyframes meter-fall{50%{transform:translateY(5px) rotate(-7deg) scale(.95);filter:drop-shadow(0 2px 6px #d17c5855)}}
+#bReserve .tutorial-finger{display:none;position:absolute;z-index:30;width:51px;height:58px;left:calc(50% - 15px);top:20px;pointer-events:none;filter:drop-shadow(0 3px 2px #0005)}#bReserve.boost-tutorial{z-index:25;overflow:visible;border-color:#fff1a9;box-shadow:0 0 0 5px #e4ce7866,0 0 30px #e4ce7855}#bReserve.boost-tutorial .tutorial-finger{display:block;animation:tap-reserve 1.2s ease-in-out infinite}@keyframes tap-reserve{0%,100%{transform:translateY(10px) scale(1)}45%{transform:translateY(0) scale(.9)}65%{transform:translateY(2px) scale(.96)}}
+@media(max-height:740px){.decisions{padding-top:0}.requests-title{font-size:28px;margin-bottom:17px}.nation-meters{margin-bottom:13px}.nation-stat svg{width:34px;height:38px}#cText{min-height:69px;font-size:14px;margin-bottom:12px}.deck{width:72%;max-width:225px}.request-progress{margin-top:20px}#budgetScreen .money-piles{gap:7px}#budgetScreen .money-pile{width:48px;min-width:48px;height:54px}.money-pile .coins i{width:43px;height:39px}#budgetScreen .money-pile b{font-size:21px;line-height:40px}}
+@media(prefers-reduced-motion:reduce){.arrow-line,.nation-stat.meter-preview svg,#bReserve.boost-tutorial .tutorial-finger{animation:none}.icon-fill,.ring-progress{transition:none}}
+.icon-fill{transition:transform 1s cubic-bezier(.2,.6,.25,1),fill .5s}@media(prefers-reduced-motion:reduce){.icon-fill{transition:none}}
+
+#cardFeedback{position:absolute;bottom:8px;left:0;right:0;margin:0;padding:12px;background:#efe4be;color:#34382a;border-radius:10px;text-align:center;font-size:15px;z-index:5}#cardFeedback[hidden]{display:none}.swipe-stamp{font-size:clamp(13px,2.4vh,19px);line-height:1.3}
+
+#cardFeedback{top:48%;bottom:auto;transform:translateY(-20%);max-height:46%;overflow:auto;white-space:pre-line;padding:16px;border:2px solid #cdb775;box-shadow:0 8px 28px #0005;line-height:1.5;font-size:14px}
+
+.nation-stat svg{width:52px;height:56px}.nation-stat .icon-fill{transition:none!important}.nation-stat.meter-preview svg{animation:none}.nation-stat{min-width:64px}.meter-change{position:absolute;left:50%;top:-27px;transform:translateX(-50%);margin-left:-30px;width:60px;font:bold 20px Arial;direction:ltr;opacity:0;white-space:nowrap;pointer-events:none}.nation-meters{margin-top:10px;margin-bottom:26px}#cardFeedback{font-size:19px;padding:14px;white-space:normal;line-height:1.4;text-align:center;max-height:30%;top:51%}#budgetScreen .money-pile.usa .coins i{background:#edc867;border-color:#a47b2d;box-shadow:0 4px 0 #a58035}#budgetScreen .money-pile small{display:none}.us-flag{position:absolute;right:-5px;top:-6px;width:21px;height:14px;background:repeating-linear-gradient(to bottom,#bd3d44 0 1.1px,#fff 1.1px 2.2px);border:1px solid #f3edd4;box-shadow:0 1px 3px #0005}.us-flag i{display:block;position:absolute;top:0;left:0;width:9px;height:8px;background:#334c80}@media(max-height:740px){.nation-stat svg{width:40px;height:44px}.meter-change{font-size:17px;top:-23px}.nation-meters{margin-top:6px;margin-bottom:16px}#cardFeedback{font-size:16px}}
+
+#hud{display:none!important}#general .face img{display:block;width:100%;height:100%;object-fit:cover}#general .face{overflow:hidden}
+
+</style>
+
+<div id="stage">
+  <div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="hud"><span id="campaignStatus"></span><button id="zoomIn" aria-label="התקרבות למפה">+</button><button id="zoomOut" aria-label="כל המפה">−</button>
+      <button id="homeBtn" type="button">תפריט</button>
+      <button id="restartBtn" type="button" aria-label="התחל מחדש">↻ מחדש</button>
+    </div>
+    <div id="general" hidden>
+      <div class="face" aria-hidden="true"><img src="assets/general-warm.png" alt="">
+      </div>
+      <div class="bubble"><span class="who">המפקד</span><span id="genText"></span><button id="genOk" type="button" hidden>הבנתי</button></div>
+    </div>
+    <div id="toast"></div>
+    <div class="overlay" id="startScreen">
+      <div class="card">
+        <h1>גבולות</h1>
+        <p>מגנים על היישובים בשטח וכובשים את כל המפה. המפקד ילווה אתכם בשלב הראשון.</p><details class="source-info"><summary>על המפות ונתוני הפתיחה</summary>מפות המשחק מבוססות על מקומות אמיתיים ומאוירות באופן סכמטי. יו״ש מתחילה ב־60% כקירוב לשטח C, ולא כמדידה עדכנית של כלל השליטה הביטחונית. עזה מתחילה ב־60% כערך משחק. <a href="https://www.ochaopt.org/content/area-c" target="_blank" rel="noopener">מקור: OCHA</a>. הכותרות, האירועים והשמות בעיתון הם בדיוניים.</details>
+        <button class="big" id="startBtn" type="button"><span>התחל</span><small>משחק מלא מהשלב הראשון</small></button>
+        <button class="ghost" id="chooseLevelBtn" type="button" aria-expanded="false" aria-controls="levelChoices">בחירת שלב לבדיקה</button>
+        <div class="levels" id="levelChoices" hidden></div>
+      </div>
+    </div>
+    <div class="overlay" id="endScreen" hidden>
+      <div class="card">
+        <h2 id="endTitle">ניצחון</h2>
+        <p id="endText"></p>
+        <div id="endBtns">
+          <button class="big" id="nextBtn" type="button"><span id="nextLabel">שלב 2</span></button>
+          <button class="ghost" id="againBtn" type="button">שחק שוב</button>
+        </div>
+        <button class="ghost" id="menuBtn" type="button">תפריט ראשי</button>
+      </div>
+    </div>
+<div class="overlay" id="winScreen" hidden><div class="campaign-sheet hero-win"><img src="assets/victory-hero-casual.png" alt="חיילים בפוזות קרב הרואיות"><h2>ניצחון!</h2><p id="victoryRegion"></p><button class="primary" id="winNext">הלאה ←</button></div></div>
+<div class="overlay" id="summaryScreen" hidden><div class="campaign-sheet"><span class="eyebrow">סיכום המערכה</span><h2 id="summaryTitle"></h2><div id="territorySummary"></div><div class="stat-grid" id="battleStats"></div><p class="local-note">המספרים הם תוצאות המשחק. כל 10 יחידות אדומות = לוחם פלסטיני; כל 30 יחידות כחולות = חייל ישראלי.</p><button class="primary" id="summaryNext">למהדורת הערב ←</button></div></div>
+<div class="overlay" id="newsScreen" hidden><div class="campaign-sheet paper-sheet"><small id="paperDate"></small><h2>היום שאחרי</h2><div id="newsArticles"></div><section class="obituary"><strong>הותר לפרסום</strong><p id="fallenReport"></p><small>שמות בדיוניים לצורכי הפרוטוטייפ</small></section><small>מהדורת משחק · הכותרות בדיוניות ומגיבות להחלטות שלך</small><button class="primary" id="newsNext" style="margin-top:14px">להמשך ←</button></div></div>
+<div class="overlay" id="budgetScreen" hidden><div class="campaign-sheet budget-sheet"><span class="eyebrow">ישיבת הממשלה</span><h2>לאן הולך הכסף?</h2><div class="budget-hint">גררו כסף לתיקים. בין תיק לתיק: מיליארד.</div><div class="aid-notice" id="aidNotice" hidden></div><div id="folders" class="folders budget-map"></div><div class="money-zone"><div class="money-header"><b id="moneyRemaining"></b><span>מיליארדי ₪</span></div><div class="money-piles" id="moneyPiles"></div></div><button class="primary" id="budgetGo">לשלב הבא ←</button></div></div>
+<div class="overlay" id="cardScreen" hidden><div class="decisions"><h2 class="requests-title">ראש הממשלה, כמה בקשות</h2><div id="nationMeters" class="nation-meters"></div><p id="cText"></p><p id="cardFeedback" role="status" aria-live="polite" hidden></p><div class="deck" id="deck"><div class="card-back"></div><div id="dcard" class="portrait-card" tabindex="0" role="group" aria-label="החלקת קלף החלטה"><div id="cAva"></div><div id="swipeStamp" class="swipe-stamp"></div></div></div><div id="requestProgress" class="request-progress" aria-label="התקדמות הקלפים"></div></div></div>
+<div class="overlay" id="iranScreen" hidden><div class="campaign-sheet iran-sheet"><span class="eyebrow" style="color:#f2afa0">התרעה ארצית</span><h2>מלחמת איראן</h2><div class="placeholder">מסך המחשה · משחק ההגנה יפותח בהמשך</div><svg class="iran-map" viewBox="0 0 370 390" aria-label="מפת ישראל עם מערכות יירוט וטילים מצפון וממזרח"><defs><pattern id="mapGrid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="#7a4040" stroke-width=".5"/></pattern></defs><rect width="370" height="390" fill="url(#mapGrid)"/><path d="M175 25L214 39 210 76 223 104 213 157 230 204 208 259 183 348 168 374 153 312 131 260 119 222 133 186 136 143 151 110 155 76Z" fill="#d7bd8a" stroke="#f9e9bd" stroke-width="3"/><path d="M173 118l32 10 6 49-28 16-19-40Z" fill="#b5996e" stroke="#816e50" stroke-dasharray="4 4"/><path d="M123 213l-13 23 8 8 15-28Z" fill="#b5996e"/><g fill="#ffe2af" font-family="Rubik" font-size="12" text-anchor="end"><text x="118" y="105">חיפה</text><text x="119" y="168">תל אביב</text><text x="285" y="183">ירושלים</text><text x="122" y="250">באר שבע</text><text x="156" y="371">אילת</text></g><g fill="#89bcae" stroke="#d7ffff" stroke-width="2"><path d="M150 89l10-9 10 9v12h-20Z"/><path d="M135 153l10-9 10 9v12h-20Z"/><path d="M180 181l10-9 10 9v12h-20Z"/><path d="M150 246l10-9 10 9v12h-20Z"/></g><g fill="none" stroke="#80cab9" stroke-width="2" stroke-dasharray="4 5"><path d="M160 91Q141 47 117 48M146 154Q125 90 90 100M190 183Q255 130 258 79M160 247Q222 231 270 203"/></g><g fill="#ef7a61" stroke="#ffd1a3" stroke-width="1"><path d="M78 18l9 39-13-9-7-20Z"/><path d="M117 11l13 36-14-7-9-21Z"/><path d="M326 82l-35 28 5-18 19-16Z"/><path d="M347 167l-38 21 7-17 23-11Z"/><path d="M320 247l-36 13 9-14 20-8Z"/></g><g fill="#ffada0" font-family="Rubik" font-size="13" text-anchor="middle"><text x="82" y="77">מצפון</text><text x="305" y="145">מאיראן</text></g></svg><div class="iran-stats" id="iranStats"></div><p>התקציב וההחלטות נשמרים. במסך ההמחשה אין קרב ואין נפגעים.</p><button class="primary" id="iranNext">המשך לממשלה ←</button></div></div>
+<div class="overlay" id="impactScreen" hidden><div class="impact-panel"><h2 id="impactTitle"></h2><p id="impactText"></p><button id="impactNext">הבנתי ←</button></div></div>
+<div class="overlay" id="runEndScreen" hidden><div class="campaign-sheet"><span class="eyebrow">סוף הכהונה</span><h2 id="runEndTitle"></h2><div class="run-years" id="runYears"></div><p id="runEndReason"></p><div class="stat-grid" id="runTotals"></div><div class="leader-tabs"><button id="leaderArea" class="active">הכי הרבה שטח</button><button id="leaderSurvival">זמן ונפגעים</button></div><div id="leaderContent"></div><p class="local-note">שיאים מקומיים במכשיר הזה · חיבור אונליין יתווסף בהמשך</p><div class="new-game-actions"><button id="newRun">משחק חדש</button><button id="runMenu">תפריט</button></div></div></div>
+
+  </div>
+  <div id="bar">
+    <button class="boost" id="bReserve" type="button" aria-label="מילואים">
+      <svg class="lock" viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="#c4bba3" stroke-width="3.5"><rect x="7" y="15" width="20" height="15" rx="3"/><path d="M11 15v-4a6 6 0 0112 0v4"/></g></svg>
+      <svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="#f2b51d" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><path d="M7 20l10-7 10 7"/><path d="M7 28l10-7 10 7"/><path d="M7 12l10-7 10 7"/></g></svg>
+      <span class="stock">3</span><span class="name">מילואים</span><span class="sub" data-sub="25 לוחמים">25 לוחמים</span>
+      <span class="cd" hidden></span>
+    </button>
+    <button class="boost" id="bDrone" type="button" aria-label="רחפנים">
+      <svg class="lock" viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="#c4bba3" stroke-width="3.5"><rect x="7" y="15" width="20" height="15" rx="3"/><path d="M11 15v-4a6 6 0 0112 0v4"/></g></svg>
+      <svg viewBox="0 0 34 34" aria-hidden="true"><g stroke="#9fd3c7" stroke-width="2.6" fill="none"><path d="M10 10l14 14M24 10L10 24"/><circle cx="8" cy="8" r="5"/><circle cx="26" cy="8" r="5"/><circle cx="8" cy="26" r="5"/><circle cx="26" cy="26" r="5"/></g><rect x="13.5" y="13.5" width="7" height="7" rx="2" fill="#9fd3c7"/></svg>
+      <span class="stock">3</span><span class="name">רחפנים</span><span class="sub" data-sub="3 חוליות">3 חוליות</span>
+      <span class="cd" hidden></span>
+    </button>
+    <button class="boost" id="bTech" type="button" aria-label="איתור">
+      <svg class="lock" viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="#c4bba3" stroke-width="3.5"><rect x="7" y="15" width="20" height="15" rx="3"/><path d="M11 15v-4a6 6 0 0112 0v4"/></g></svg>
+      <svg viewBox="0 0 34 34" aria-hidden="true"><g fill="none" stroke="#7fe0ff" stroke-width="2.6" stroke-linecap="round"><circle cx="17" cy="17" r="13"/><circle cx="17" cy="17" r="7.5"/><path d="M17 17L27 8"/></g><circle cx="17" cy="17" r="2.6" fill="#7fe0ff"/><circle cx="23" cy="22" r="2.2" fill="#ff8a7a"/></svg>
+      <span class="stock">3</span><span class="name">רדאר</span><span class="sub" data-sub="עוצר חוליות">עוצר חוליות</span>
+      <span class="cd" hidden></span>
+    </button>
+<button class="boost" id="bCluster" hidden type="button" aria-label="פצצות מצרר"><span class="stock">0</span><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M17 2l4 9 10 2-7 7 1 11-8-5-9 5 2-11-7-7 10-2Z" fill="#e8c570"/></svg><span class="name">מצרר</span><span class="sub">20 לכל בסיס</span><span class="cd" hidden></span></button>
+  </div>
+</div>
+
+<script>
+(()=>{
+let W=720,H=1280;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={P:css('--player'),Pd:css('--player-dark'),E:css('--enemy'),Ed:css('--enemy-dark'),N:css('--neutral'),Nd:css('--neutral-dark'),roof:css('--roof'),warn:css('--warn'),drone:css('--drone'),tech:css('--tech'),special:css('--special')};
+const FILL={P:C.P,E:C.E,N:C.N}, RING={P:C.Pd,E:C.Ed,N:C.Nd}, TXT={P:'#fff',E:'#fff',N:'#3a362c'};
+const FONT='Rubik, system-ui, sans-serif';
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- tuning ----------
+const UNIT_SPEED=115, ENEMY_SPEED=40, SNEAK_SPEED=35, DRONE_SPEED=260, DRONE_DPS=9, DRONE_TIME=3.5;
+const BUILD_TIME=4, ZOOM=1.9, TECH_TIME=7;
+let BORDER_Y=1250;
+const KIND={
+  base:   {r:46,cap:50,grow:1.1,label:'בסיס'},
+  hq:     {r:46,cap:50,grow:1.0,label:'מפקדה'},
+  outpost:{r:34,cap:30,grow:0.7,label:'עמדה'},
+  post:   {r:34,cap:30,grow:0.7,label:'נק׳ שמירה'},
+  guard:  {r:34,cap:20,grow:0,  label:'שמירה'},
+};
+const THRESH=0.75;
+
+const LEVELS=[
+ { name:'שלב 1', region:'חומש', tut:'basics', boosters:[], enemySpeed:48,
+   pGrow:1.15, eGrow:.4, ai:[8,12], aiMargin:5, aiFrac:.6, aiStart:5,
+   harassStart:10, harassEvery:[22,28], harassFrac:.2, warnSettlement:35, warnRanch:40,
+   nodes:[
+    {id:'b1',kind:'base',owner:'P',x:170,y:1150,t:40},
+    {id:'b2',kind:'base',owner:'P',x:560,y:1150,t:40},
+    {id:'n1',kind:'post',owner:'N',x:570,y:720,t:15},
+    {id:'n2',kind:'post',owner:'N',x:120,y:620,t:15},
+    {id:'e1',kind:'outpost',owner:'E',x:190,y:330,t:12,hidden:true},
+    {id:'e2',kind:'hq',owner:'E',x:440,y:190,t:30,hidden:true},
+    {id:'e3',kind:'outpost',owner:'E',x:610,y:430,t:12,hidden:true},
+   ],
+   settlement:{title:'התיישבות צעירה – חומש',x:300,y:930,residents:20,gx:300,gy:790,cap:20,start:0},
+   ranches:[{at:Infinity,x:390,y:480}],
+   terrain:{seed:3,rx:.4,road:[[470,1295],[420,1130],[385,1010],[392,900],[372,780],[402,640],[378,500],[420,340],[398,180],[430,-15]],
+     wadi:[[-10,540],[110,520],[200,560],[260,610],[330,600],[420,560],[520,600],[620,560],[730,520]],
+     shield:[452,1215],west:'צפון השומרון',east:'בקעת הירדן',arid:0}
+ },
+ { name:'שלב 2', region:'הרי שומרון', tut:'special', boosters:['reserve','drone'], mapScale:1.2, enemySpeed:65,
+   pGrow:1.3, eGrow:.7, ai:[6,9], aiMargin:4, aiFrac:.65, aiStart:8,
+   harassStart:24, harassEvery:[26,34], harassFrac:.25,
+   warnSettlement:28, warnRanch:38, cdReserve:35, cdDrone:28, cdTech:40,
+   special:{first:38, every:[45,60], linger:6, up:3.6, down:1.2, n:5, speed:65, max:1},
+   nodes:[
+    {id:'b1',kind:'base',owner:'P',x:130,y:1150,t:25},
+    {id:'b2',kind:'base',owner:'P',x:600,y:1145,t:25},
+    {id:'n1',kind:'post',owner:'N',x:168,y:560,t:10},
+    {id:'n2',kind:'post',owner:'N',x:525,y:520,t:10},
+    {id:'n3',kind:'post',owner:'N',x:100,y:790,t:10},
+    {id:'n4',kind:'post',owner:'N',x:610,y:800,t:10},
+    {id:'e1',kind:'outpost',owner:'E',x:150,y:160,t:18},
+    {id:'e2',kind:'hq',owner:'E',x:410,y:115,t:36},
+    {id:'e3',kind:'outpost',owner:'E',x:585,y:340,t:20},
+    {id:'e4',kind:'outpost',owner:'E',x:85,y:400,t:26},
+    {id:'e5',kind:'outpost',owner:'E',x:350,y:300,t:20},
+    {id:'e6',kind:'outpost',owner:'E',x:635,y:150,t:18},
+   ],
+   settlement:{x:360,y:870,residents:20,gx:360,gy:735,cap:20},
+   ranches:[{at:16,x:310,y:455},{at:36,x:645,y:580},{at:60,x:310,y:185}],
+   extraSlots:[{at:28,x:110,y:420},{at:40,x:230,y:680}],
+   villages:[{x:330,y:165},{x:455,y:660},{x:120,y:1000}],
+   terrain:{seed:1,rx:.46,road:[[470,1295],[430,1110],[455,980],[410,890],[440,780],[395,640],[430,520],[385,400],[425,260],[400,120],[420,-15]],
+     wadi:[[-10,700],[90,660],[170,690],[250,640],[300,600],[330,520],[400,470],[470,410],[560,380],[640,300],[730,260]],
+     shield:[478,1215],west:'הרי שומרון',east:'בקעת הירדן',arid:0}
+ },
+ { name:'שלב 3', region:'הר חברון', tut:'tech', boosters:['reserve','drone','tech'],
+   pGrow:1.0, eGrow:.25, ai:[16,22], aiMargin:10, aiFrac:.4, aiStart:12,
+   harassStart:60, harassEvery:[55,75], harassFrac:.15,
+   warnSettlement:60, warnRanch:75, cdReserve:45, cdDrone:38, cdTech:40,
+   special:{first:60, every:[75,95], linger:7, up:3, down:1.5, n:3, speed:45, max:1},
+   nodes:[
+    {id:'b1',kind:'base',owner:'P',x:110,y:1140,t:15},
+    {id:'b2',kind:'base',owner:'P',x:640,y:1010,t:15},
+    {id:'n1',kind:'post',owner:'N',x:150,y:640,t:18},
+    {id:'n2',kind:'post',owner:'N',x:540,y:700,t:18},
+    {id:'n3',kind:'post',owner:'N',x:110,y:900,t:12},
+    {id:'n4',kind:'post',owner:'N',x:470,y:950,t:12},
+    {id:'e1',kind:'outpost',owner:'E',x:130,y:230,t:18},
+    {id:'e2',kind:'hq',owner:'E',x:380,y:120,t:40},
+    {id:'e3',kind:'outpost',owner:'E',x:620,y:250,t:18},
+    {id:'e4',kind:'outpost',owner:'E',x:320,y:440,t:14},
+   ],
+   settlement:{x:300,y:860,residents:24,gx:300,gy:725,cap:20},
+   ranches:[{at:12,x:520,y:480},{at:34,x:160,y:420},{at:58,x:640,y:600}],
+   extraSlots:[{at:46,x:430,y:610},{at:52,x:250,y:560}],
+   villages:[{x:250,y:320},{x:480,y:330},{x:580,y:860}],
+   terrain:{seed:5,rx:.42,road:[[300,1295],[340,1120],[300,1000],[360,880],[330,760],[390,620],[350,500],[420,360],[380,220],[430,80],[410,-15]],
+     wadi:[[730,900],[640,860],[580,800],[500,780],[430,700],[420,610],[460,540],[540,500],[620,420],[730,380]],
+     shield:[356,1210],west:'הר חברון',east:'מדבר יהודה',arid:1}
+ },
+];
+
+// Expand world distances while retaining the portrait layout and original artwork.
+function levelWorld(level){
+  const k=level.mapScale||1;if(k===1)return level;
+  const point=p=>({...p,x:p.x*k,y:p.y*k});
+  const T=level.terrain;
+  return {...level,nodes:level.nodes.map(point),
+    settlement:{...point(level.settlement),gx:level.settlement.gx*k,gy:level.settlement.gy*k},
+    ranches:level.ranches.map(point),extraSlots:(level.extraSlots||[]).map(point),villages:(level.villages||[]).map(point),
+    extraSettlements:(level.extraSettlements||[]).map(s=>({...point(s),gx:s.gx*k,gy:s.gy*k})),
+    terrain:{...T,road:T.road.map(p=>p.map(v=>v*k)),wadi:T.wadi.map(p=>p.map(v=>v*k)),shield:T.shield.map(v=>v*k)}};
+}
+// ---------- terrain ----------
+function mkRng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let SEED=0;
+function hash(x,y){let h=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(SEED,1442695041)+1013904223|0;h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return(h>>>0)/4294967295}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash(xi,yi),b=hash(xi+1,yi),c=hash(xi,yi+1),d=hash(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+function fbm(x,y){let s=0,a=.5,f=1;for(let i=0;i<5;i++){s+=a*vnoise(x*f+i*17.3,y*f-i*9.1);f*=2.03;a*=.5}return s}
+const sstep=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+const terrainCache={};
+function buildTerrain(T){
+  SEED=T.seed;
+  const sw=W/2,sh=H/2,E=new Float32Array(sw*sh),rxAt=v=>T.rx+.07*Math.sin(v*3.3+.6+T.seed);
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const u=x/sw,v=y/sh,rx=rxAt(v),ridge=Math.exp(-((u-rx)**2)/.05);
+    E[y*sw+x]=.5*ridge+.5*fbm(u*4.2,v*7.5)-(u>rx?(u-rx)*.55:0);
+  }
+  const s=document.createElement('canvas');s.width=sw;s.height=sh;const sg=s.getContext('2d');const img=sg.createImageData(sw,sh);
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const i=y*sw+x,e=E[i],u=x/sw,v=y/sh,rx=rxAt(v);
+    const east=sstep(rx-.04-T.arid*.15,rx+.4-T.arid*.2,u), k=sstep(.35,.85,e);
+    let r=lerp(176,228,k),g=lerp(168,214,k),b=lerp(112,176,k);
+    if(T.arid){r=lerp(r,206,.3);g=lerp(g,190,.3);b=lerp(b,140,.3)}
+    r=lerp(r,lerp(214,196,e),east);g=lerp(g,lerp(178,154,e),east);b=lerp(b,lerp(130,112,e),east);
+    const nw=E[Math.max(0,y-1)*sw+Math.max(0,x-1)];
+    let f=clamp(1+(e-nw)*9,.82,1.14);
+    if((e*15)%1<.07)f*=.9;
+    const gr=(hash(x*7,y*3)-.5)*8;
+    img.data[i*4]=r*f+gr;img.data[i*4+1]=g*f+gr;img.data[i*4+2]=b*f+gr;img.data[i*4+3]=255;
+  }
+  sg.putImageData(img,0,0);
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.imageSmoothingEnabled=true;g.drawImage(s,0,0,W,H);
+  const curve=(pts,lw,col,dash)=>{g.save();g.lineCap='round';g.lineJoin='round';g.strokeStyle=col;g.lineWidth=lw;if(dash)g.setLineDash(dash);
+    g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length-1;i++){const mx=(pts[i][0]+pts[i+1][0])/2,my=(pts[i][1]+pts[i+1][1])/2;g.quadraticCurveTo(pts[i][0],pts[i][1],mx,my)}
+    const l=pts[pts.length-1];g.lineTo(l[0],l[1]);g.stroke();g.restore()};
+  curve(T.wadi,14,'rgba(238,228,200,.55)');curve(T.wadi,3,'rgba(120,110,80,.35)');
+  const rnd=mkRng(7+T.seed), density=T.arid?1500:2600;
+  for(let k=0;k<density;k++){const x=rnd()*W,y=rnd()*H,e=E[Math.floor(y/2)*sw+Math.floor(x/2)],u=x/W;
+    if(u>.55||e<.3||e>.7||fbm(x/90,y/90)<.52)continue;
+    g.fillStyle='rgba(60,58,30,.25)';g.beginPath();g.arc(x+1.5,y+1.5,3,0,7);g.fill();
+    g.fillStyle='rgba(86,98,52,.85)';g.beginPath();g.arc(x,y,2.8,0,7);g.fill();}
+  curve(T.road,13,'rgba(60,54,48,.35)');curve(T.road,9,'#6d665d');curve(T.road,1.6,'rgba(240,220,150,.8)',[10,12]);
+  g.save();g.translate(T.shield[0],T.shield[1]);g.fillStyle='#f5f1e6';g.strokeStyle='#3b3a36';g.lineWidth=2;g.beginPath();g.roundRect(-17,-12,34,24,5);g.fill();g.stroke();
+  g.fillStyle='#2a2925';g.font=`700 15px ${FONT}`;g.textAlign='center';g.textBaseline='middle';g.fillText('60',0,1);g.restore();
+  g.save();g.fillStyle='rgba(60,50,30,.3)';g.font='700 46px Karantina, sans-serif';g.textAlign='left';g.fillText(T.west,36,1030);
+  g.font='700 34px Karantina, sans-serif';g.translate(700,640);g.rotate(Math.PI/2);g.textAlign='center';g.fillStyle='rgba(90,60,30,.28)';g.fillText('← '+T.east,0,0);g.restore();
+  // border strip: everything below it is inside Israel
+  g.fillStyle='rgba(90,120,170,.12)';g.fillRect(0,BORDER_Y,W,H-BORDER_Y);
+  g.save();g.strokeStyle='rgba(40,40,40,.55)';g.lineWidth=3;g.setLineDash([14,10]);g.beginPath();g.moveTo(0,BORDER_Y);g.lineTo(W,BORDER_Y);g.stroke();g.restore();
+  g.fillStyle='rgba(30,30,30,.55)';g.font=`700 13px ${FONT}`;g.textAlign='right';g.fillText('גבול · ישראל',W-14,BORDER_Y+20);
+  const vg=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(30,20,5,.35)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+  decorateTerrain(g,T);
+  return c;
+}
+
+// hand pointer for the tutorial (fingertip at 22,4)
+const HAND=new Image();
+HAND.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72"><path d="M22 4c-3 0-5 2-5 5v28l-5-5c-2-2-6-2-8 0s-2 5 0 7l15 17c3 4 7 6 12 6h7c9 0 15-6 15-15V33c0-3-2-5-5-5-1 0-2 0-3 1 0-3-2-5-5-5-2 0-3 1-4 2-1-2-3-3-5-3-1 0-2 0-3 1V9c0-3-2-5-5-5z" fill="#fff" stroke="#1c1a15" stroke-width="3.5" stroke-linejoin="round"/></svg>');
+
+// ---------- canvas / scaling ----------
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),wrap=document.getElementById('wrap'),bar=document.getElementById('bar'),stage=document.getElementById('stage');
+let scale=1,dpr=1;
+function fit(){
+  const vw=innerWidth,vh=stage.clientHeight||innerHeight,bh=bar.offsetHeight;
+  scale=Math.min(vw/W,(vh-bh)/H);dpr=Math.min(devicePixelRatio||1,2.5);
+  wrap.style.width=W*scale+'px';wrap.style.height=H*scale+'px';bar.style.width=Math.max(W*scale,Math.min(vw,340))+'px';
+  cv.width=Math.round(W*scale*dpr);cv.height=Math.round(H*scale*dpr);
+}
+addEventListener('resize',fit);
+
+// ---------- state ----------
+let S,LV,LI=0,terrain=null;
+const byId=id=>S.nodes.find(n=>n.id===id);
+function reset(li){
+  LI=li;LV=levelWorld(LEVELS[li]);
+  W=720*(LV.mapScale||1);H=1280*(LV.mapScale||1);BORDER_Y=H-30;fit();
+  terrain=terrainCache[li]||(terrainCache[li]=buildTerrain(LV.terrain));
+  const nodes=LV.nodes.map(n=>({...n,troops:n.t,...KIND[n.kind],hidden:!!n.hidden,sector:n.sector||LV.sector,flash:0,pending:0}));
+  const sites=[],st=LV.settlement;
+  const g={id:'g0',kind:'guard',owner:'P',sector:st.sector||LV.sector,x:st.gx,y:st.gy,troops:st.start??st.cap,...KIND.guard,cap:st.cap,hidden:false,flash:0,pending:0};
+  nodes.push(g);
+  sites.push({kind:'settlement',title:st.title,x:st.x,y:st.y,residents:st.residents,g,warn:null,secured:st.start===undefined,sneak:null,pop:1,state:'up'});
+  plannedRanches().forEach((r,i)=>{
+    const rg={id:'r'+i,kind:'guard',owner:'P',sector:r.sector||LV.sector,x:r.x,y:r.y,troops:0,...KIND.guard,r:30,cap:10,hidden:true,flash:0,pending:0};
+    nodes.push(rg);
+    sites.push({kind:'ranch',x:r.x,y:r.y+40,residents:10,g:rg,warn:null,secured:false,sneak:null,at:r.at,state:'wait',bt:0,pop:0});
+  });
+  if(S)S.paused=false;
+  S={nodes,sites,units:[],dispatch:[],drones:[],specials:[],fx:[],t:0,rt:0,
+     ai:LV.aiStart||0,harass:LV.harassStart||0,spec:LV.special?LV.special.first:0,
+     over:false,sel:[],armed:null,pointer:null,drag:false,ranchesUp:0,
+     cd:{reserve:0,drone:0,tech:0,cluster:0},cdMax:{},used:{reserve:0,drone:0,tech:0,cluster:0},lost:0,enemyLost:0,israeliCiv:0,retaliation:false,incident:null,civKilled:0,civT:22,techT:0,focus:null,frozen:false,cam:{x:W/2,y:H/2,z:1},camTo:{x:W/2,y:H/2,z:1},paused:false,hand:null,tutI:0,tutDone:false,aiOn:LV.tut!=='basics',seenSpecial:false};
+  applySitePolicy();spaceMapPoints();beginDeployment();terr.key='';terr.okey='';
+  hideGeneral();
+  paintLocks();
+}
+const guardSite=n=>S.sites.find(s=>s.g===n);
+const thr=n=>n.requiredGuard??Math.ceil(n.cap*THRESH);
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const rr=([a,b])=>a+Math.random()*(b-a);
+const siteThreatsActive=()=>LV.tut!=='basics'||S.tutDone;
+const enemySpeed=()=>LV.enemySpeed||ENEMY_SPEED;
+const growMul=o=>o==='P'?LV.pGrow*MODS.growMul:o==='E'?(S.aiOn?LV.eGrow:0):0;
+const avail=n=>Math.floor(n.troops-(n.pending||0));
+const fieldP=()=>S.nodes.filter(n=>n.owner==='P'&&!n.hidden&&n.kind!=='guard');
+
+// ---------- the general ----------
+const genEl=document.getElementById('general'),genText=document.getElementById('genText'),genOk=document.getElementById('genOk');
+let genCb=null;
+function say(text,opt={}){
+  genText.textContent=text;genEl.hidden=false;
+  genEl.classList.remove('pop');void genEl.offsetWidth;genEl.classList.add('pop');
+  genOk.hidden=!opt.pause;S.paused=!!opt.pause;genCb=opt.onOk||null;
+  bar.classList.toggle('hint',!!opt.hintBar);
+}
+function placeGeneral(){
+  const h=S.briefTarget?{b:{...S.briefTarget,r:55}}:typeof S.hand==='function'?S.hand():S.hand,wrapH=H*scale,gh=genEl.offsetHeight;let top=50;
+  if(h&&h.b&&MODE==='game'){const c=camera(),sy=((h.b.y-c.cy)*c.z+H/2)*scale,rr=(h.b.r||20)*c.z*scale;
+    top=sy-rr-gh-80*c.z*scale;if(top<8)top=sy+rr+24*c.z*scale;top=clamp(top,8,wrapH-gh-8)}
+  genEl.style.top=top+'px';
+}
+function hideGeneral(){genEl.hidden=true;genOk.hidden=true;if(S)S.paused=false;bar.classList.remove('hint')}
+genOk.onclick=()=>{const cb=genCb;genCb=null;hideGeneral();if(S)S.hand=null;cb&&cb()};
+
+// ---------- camera focus (zoom on something, hold, zoom back; the game waits) ----------
+function focusOn(x,y,cb,hold=1.5,z=ZOOM){if(LI===1){cb&&cb();return;}S.focus={t:0,hold,cb,back:{...S.camTo}};S.camTo={x,y,z}}
+function camStep(dt){S.cam={x:W/2,y:H/2,z:1};S.camTo={...S.cam};}
+function camera(){return{z:1,cx:W/2,cy:H/2}}
+
+// ---------- sending ----------
+function incomingP(t){let k=0;for(const u of S.units)if(u.o==='P'&&(u.dst===t||u.sq===t))k++;for(const d of S.dispatch)if(d.o==='P'&&d.dst===t)k+=d.left;return k}
+function send(src,dst,n){
+  if(src.owner==='E'&&dst.owner==='P'&&dst.kind!=='guard'&&(n??avail(src))<=dst.troops+incomingP(dst))return 0;
+  const a=src.virtual?n:avail(src);n=Math.min(n??a,a);if(n<1||src===dst)return 0;
+  if(!src.virtual)src.pending+=n;
+  S.dispatch.push({o:src.owner||'P',src,dst,left:n,acc:0});
+  return n;
+}
+// player orders: guards and special squads get only what they need, everything else gets all
+function order(srcs,t){
+  srcs=srcs.filter(s=>s.owner==='P'&&(!s.sector||!t.sector||s.sector===t.sector));
+  if(!srcs.length){toast('בחרו כוח מאותה גזרה');return;}
+  if(S.deployment&&(!S.deployment.some(s=>s.g===t))){toast('קודם שלחו כוח להגנת היישובים');return;}
+  if(!srcs.some(s=>avail(s)>0)||srcs.every(s=>s===t))return;
+  if(t.kind==='guard'&&t.troops+incomingP(t)>=t.cap)return;
+  S.frozen=false;
+  if(LV.tut==='basics'||S.deployment)hideGeneral();
+  if(t.isSquad){let need=t.n+3-incomingP(t);for(const s of srcs){if(need<=0)break;need-=send(s,t,need)}return}
+  if(t.kind==='guard'&&t.owner==='P'){
+    let need=Math.ceil(t.cap-t.troops-incomingP(t));
+    if(need<=0){toast('נקודת השמירה מלאה');return}
+    for(const s of srcs){if(need<=0)break;need-=send(s,t,need)}return}
+  let sent=0;for(const s of srcs)sent+=send(s,t);
+  if(t.owner==='E'&&sent>0)S.aiOn=true;
+}
+function emit(dt){
+  for(const d of S.dispatch){
+    d.acc+=dt;
+    while(d.acc>=.11&&d.left>0){
+      d.acc-=.11;
+      const dx=d.dst.x-d.src.x,dy=d.dst.y-d.src.y,L=Math.hypot(dx,dy)||1,px=-dy/L,py=dx/L;
+      for(const lane of[0,-1,1]){
+        if(d.left<=0)break;
+        if(d.dst.isSquad&&d.dst.dead){cancel(d);break}
+        // the count at the source drops one soldier at a time, as they leave
+        if(!d.src.virtual){ if(d.src.owner!==d.o||d.src.troops<1){cancel(d);break} d.src.troops-=1;d.src.pending-=1; }
+        d.left--;
+        const u={o:d.o,home:d.src.virtual?null:d.src,x:d.src.x+dx/L*(d.src.r||0)*.6+px*lane*8,y:d.src.y+dy/L*(d.src.r||0)*.6+py*lane*8,dst:d.dst};
+        if(d.dst.isSquad){u.sq=d.dst;u.dst=null}
+        if(d.o==='E')u.army=armyForDispatch(d);
+        S.units.push(u);
+      }
+    }
+  }
+  S.dispatch=S.dispatch.filter(d=>d.left>0);
+}
+function cancel(d){if(!d.src.virtual)d.src.pending=Math.max(0,d.src.pending-d.left);d.left=0}
+function arrive(u){
+  const t=u.dst;if(t.owner===u.o){t.troops+=1;return;}
+  const before=t.troops,defender=t.owner;
+  if(defender==='E')S.enemyLost+=Math.min(1,before);
+  if(defender==='P')S.lost+=Math.min(1,before);
+  if(before>=1){if(u.o==='P')S.lost++;else S.enemyLost++;}
+  t.troops-=1;t.flash=.15;
+  if(t.troops<0){
+    if(t.kind==='guard'){t.troops=0;const s=guardSite(t);if(s)breach(s,'האויב פרץ את נקודת השמירה');return;}
+    t.owner=u.o;t.troops=1;t.pending=0;S.fx.push({type:'ring',x:t.x,y:t.y,c:FILL[u.o],t:0,d:.6});
+    if(u.o==='E')toast('נקודה נפלה לאויב','bad');
+  }
+}
+function homeFor(u){if(u.home&&u.home.owner==='P'&&!u.home.hidden)return u.home;return fieldP().sort((a,b)=>dist(a,u)-dist(b,u))[0]||S.nodes.find(n=>n.owner==='P'&&!n.hidden)||null}
+
+// ---------- special squads ----------
+function spawnSpecial(){
+  const cfg=LV.special;
+  if(S.specials.length>=cfg.max)return;
+  const en=S.nodes.filter(n=>n.owner==='E'&&!n.hidden);if(!en.length)return;
+  const from=en[Math.floor(Math.random()*en.length)];
+  const target=pickBase(from);if(!target)return;
+  const first=LV.tut==='special'&&!S.seenSpecial;
+  const lt=first?6:cfg.linger;
+  const q={isSquad:true,suicide:S.retaliation,sector:from.sector,r:16,x:from.x,y:from.y+from.r+18,n:cfg.n,phase:'linger',lt,lmax:lt,up:true,cyc:0,lastX:0,lastY:0,target,dead:false};
+  q.lastX=q.x;q.lastY=q.y;
+  S.specials.push(q);S.nSpec=(S.nSpec||0)+1;
+  S.fx.push({type:'ripple',x:q.x,y:q.y,t:0,d:1.4,c:'#c86bdc'});
+  if(first){
+    S.seenSpecial=true;
+    focusOn(q.x,q.y,()=>{
+      const b=fieldP().sort((a,b)=>dist(a,q)-dist(b,q))[0];
+      S.hand=b?{a:b,b:q}:null;
+      say('זו חוליה מיוחדת. היא מחכה רגע, ואז נעה לעבר הבסיסים שלכם, נעלמת וצצה שוב. אם בסיס על הגבול מאויש בפחות מ־50%, היא יכולה לחדור לישראל. בסיס מאויש יבלום אותה. גררו אליה כוח כשהיא גלויה.',{pause:true});
+    },1.6);
+  }else toast('חוליה מיוחדת זוהתה!','bad');
+}
+function spawnCivil(){
+  if(S.specials.some(q=>q.civ)||!(LV.villages||[]).length)return;
+  const homes=S.sites.filter(x=>x.state==='up'),h=homes[Math.floor(Math.random()*homes.length)];if(!h)return;
+  const target=LV.villages.slice().sort((a,b)=>dist(a,h)-dist(b,h))[0];
+  const q={isSquad:true,civ:true,r:16,x:h.x+30,y:h.y+28,n:4,phase:'linger',lt:5,lmax:5,up:true,cyc:0,target,dead:false};
+  q.lastX=q.x;q.lastY=q.y;S.specials.push(q);
+  S.fx.push({type:'ripple',x:q.x,y:q.y,t:0,d:1.4,c:'#5aa0ff'});
+  toast('חוליית אזרחים ישראלים מתארגנת ליד החווה','warn');
+}
+function pickBase(from){
+  const bases=S.nodes.filter(n=>n.owner==='P'&&n.kind==='base'&&(!from.sector||n.sector===from.sector));
+  const pool=bases.length?bases:fieldP().filter(n=>!from.sector||n.sector===from.sector);
+  return pool.sort((a,b)=>dist(a,from)-dist(b,from))[0]||null;
+}
+function updateSpecials(dt){
+  const cfg=LV.special;if(!cfg)return;
+  if(S.aiOn){S.spec-=dt;if(S.spec<=0){S.spec=rr(cfg.every);spawnSpecial()}}
+  if(MODS.civil){S.civT-=dt;if(S.civT<=0){S.civT=rr([30,40]);spawnCivil()}}
+  for(const q of S.specials){
+    if(q.dead)continue;
+    if(q===S.briefTarget){ctx.save();ctx.strokeStyle='#fff0a6';ctx.lineWidth=5;ctx.beginPath();ctx.arc(q.x,q.y,35,0,Math.PI*2);ctx.stroke();ctx.restore();}
+    if(S.techT>0){q.up=true;q.lastX=q.x;q.lastY=q.y;continue}
+    if(q.phase==='linger'){q.up=true;q.lt-=dt;if(q.lt<=0){q.phase='move';q.cyc=cfg.up}continue}
+    q.cyc-=dt;
+    if(q.cyc<=0){q.up=!q.up;q.cyc=q.up?cfg.up:cfg.down;if(!q.up){q.lastX=q.x;q.lastY=q.y}}
+    if(q.up){q.lastX=q.x;q.lastY=q.y}
+    let tx,ty;
+    if(q.civ){ // they do not change the fight; if they reach the village, civilians die
+      tx=q.target.x;ty=q.target.y;
+      if(Math.hypot(tx-q.x,ty-q.y)<22){const k=15+Math.floor(Math.random()*6);S.civKilled+=k;S.retaliation=true;S.spec=Math.min(S.spec,3);q.dead=true;
+        S.fx.push({type:'blast',x:tx,y:ty,t:0,d:.9,small:true});toast(`${k} אזרחים פלסטינים נהרגו בכפר`,'bad');continue}
+      const dx=tx-q.x,dy=ty-q.y,L=Math.hypot(dx,dy)||1;q.x+=dx/L*110*dt;q.y+=dy/L*110*dt;continue;
+    }
+    if(q.phase==='move'){
+      if(!q.target||q.target.owner!=='P'){q.target=pickBase(q);if(!q.target){q.dead=true;continue}}
+      tx=q.target.x;ty=q.target.y;
+      if(Math.hypot(tx-q.x,ty-q.y)<q.target.r){
+        const b=q.target;
+        resolveSquadBase(q,b);if(S.cinematic)return;if(q.dead)continue;
+      }
+    }
+    if(q.phase==='cross'){if(!S.cinematic)startCinematic('border',q);return;}
+    const dx=tx-q.x,dy=ty-q.y,L=Math.hypot(dx,dy)||1;q.x+=dx/L*cfg.speed*dt;q.y+=dy/L*cfg.speed*dt;
+  }
+  // any blue unit touching a visible squad destroys it
+  for(const q of S.specials){ if(q.dead||!q.up)continue;
+    for(const u of S.units){ if(u.o!=='P'||u.dead)continue;
+      if(Math.abs(u.x-q.x)<20&&Math.abs(u.y-q.y)<20){u.dead=true;q.dead=true;S.lost++;if(!q.civ)S.enemyLost+=q.n;
+        S.fx.push({type:'ring',x:q.x,y:q.y,c:q.civ?'#5aa0ff':'#c86bdc',t:0,d:.7});toast(q.civ?'חוליית האזרחים נעצרה':'החוליה חוסלה','good');S.nKill=(S.nKill||0)+1;break}}}
+  S.specials=S.specials.filter(q=>!q.dead);
+}
+
+// ---------- boosters ----------
+const hasB=k=>k==='cluster'?MODS.clusterUnlocked:LV.boosters.includes(k)&&!(k==='drone'&&MODS.dronesBanned);
+const canAct=()=>!S.introBuild&&MODE==='game'&&running&&!S.over&&!S.paused&&!S.focus&&!S.incident&&!S.cinematic;
+function useReserve(){
+ if(S.boostTutorial){S.boostTutorial=false;hideGeneral();}
+ if(S.deployment||S.frozen)return;
+  if(!canAct()||S.cd.reserve>0||!hasB('reserve')||stock('reserve')<1)return;
+  S.cd.reserve=S.cdMax.reserve=LV.cdReserve*MODS.reserveCdMul;S.used.reserve++;spend('reserve');
+  let left=MODS.reserveN;const plan=new Map();const give=(n,k)=>{k=Math.min(k,left);if(k>0){plan.set(n,(plan.get(n)||0)+k);left-=k}};
+  const mine=S.nodes.filter(n=>n.owner==='P'&&!n.hidden);
+  mine.filter(n=>n.kind==='guard').sort((a,b)=>(guardSite(b).warn!==null)-(guardSite(a).warn!==null)||a.troops/a.cap-b.troops/b.cap)
+      .forEach(n=>give(n,Math.ceil(n.cap-n.troops-incomingP(n))));
+  // bases a special squad is heading for get topped up past the safe line
+  for(const q of S.specials)if(!q.civ&&q.target&&q.target.owner==='P')give(q.target,Math.ceil(q.target.cap*MODS.crossAt-q.target.troops)+2);
+  const incoming=new Map();for(const u of S.units)if(u.o==='E'&&u.dst&&u.dst.owner==='P')incoming.set(u.dst,(incoming.get(u.dst)||0)+1);
+  [...incoming].sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>give(n,Math.max(0,c+3-(plan.get(n)||0))));
+  const en=S.nodes.filter(n=>n.owner==='E'),field=fieldP();
+  if(left>0&&field.length){const front=en.length?field.sort((a,b)=>Math.min(...en.map(e=>dist(a,e)))-Math.min(...en.map(e=>dist(b,e))))[0]:field[0];give(front,left)}
+  if(left>0&&mine.length)give(mine[0],left);
+  for(const[n,k]of plan)S.dispatch.push({o:'P',src:{x:clamp(n.x,40,W-40),y:H+30,r:0,virtual:true},dst:n,left:k,acc:0});
+  toast(`מילואים בדרך · ${MODS.reserveN} לוחמים`,'warn');
+}
+function useDrones(){
+ if(S.deployment||S.frozen)return;
+  if(!canAct()||S.cd.drone>0||!hasB('drone')||stock('drone')<1)return;
+  const en=S.nodes.filter(n=>n.owner==='E'&&!n.hidden).sort((a,b)=>b.troops-a.troops);
+  if(!en.length){toast('אין מטרות לרחפנים');return}
+  S.cd.drone=S.cdMax.drone=LV.cdDrone*MODS.droneCdMul;S.used.drone++;spend('drone');
+  for(let i=0;i<MODS.droneCount;i++){const t=en[i%en.length];S.drones.push({x:W/2+((i%10)-4.5)*24,y:H+40+Math.floor(i/10)*9,tgt:t,phase:'fly',t:0,dmg:0,a:Math.random()*6,slot:i%5})}
+  toast(`${MODS.droneCount} חוליות רחפנים יצאו`,'good');
+}
+function useTech(){
+ if(S.deployment||S.frozen)return;
+  if(!canAct()||S.cd.tech>0||!hasB('tech')||stock('tech')<1)return;
+  S.cd.tech=S.cdMax.tech=LV.cdTech*MODS.techCdMul;S.techT=TECH_TIME*MODS.techTimeMul;S.used.tech++;spend('tech');
+  toast('רדאר פעיל: מזהה ומפציץ חוליות','good');
+}
+function updateDrones(dt){
+  for(const d of S.drones){
+    d.a+=dt*2.2;
+    if(d.phase!=='leave'&&(!d.tgt||d.tgt.owner!=='E')){
+      const n=S.nodes.filter(n=>n.owner==='E'&&!n.hidden).sort((a,b)=>dist(a,d)-dist(b,d))[0];
+      if(n&&d.phase==='fly')d.tgt=n;else d.phase='leave';
+    }
+    if(d.phase==='fly'||d.phase==='strike'){
+      const tx=d.tgt.x+(d.slot-1)*16,ty=d.tgt.y-d.tgt.r-26,dx=tx-d.x,dy=ty-d.y,L=Math.hypot(dx,dy);
+      if(d.phase==='fly'){ if(L<8){d.phase='strike';d.t=0} else {const m=Math.min(L,DRONE_SPEED*dt);d.x+=dx/L*m;d.y+=dy/L*m} }
+      else{
+        d.x=tx+Math.cos(d.a)*6;d.y=ty+Math.sin(d.a*1.3)*4;d.t+=dt;
+        const hit=Math.min(DRONE_DPS*dt,d.tgt.troops);d.tgt.troops-=hit;d.dmg+=hit;S.enemyLost+=hit;if(hit>0)S.aiOn=true;d.tgt.flash=.08;
+        if(d.tgt.troops<=0.01){d.tgt.owner='N';d.tgt.troops=0;d.tgt.pending=0;S.fx.push({type:'ring',x:d.tgt.x,y:d.tgt.y,c:'#fff',t:0,d:.7});toast('רחפנים נטרלו עמדת אויב','good');d.phase='leave'}
+        else if(d.t>=DRONE_TIME*MODS.droneTimeMul)d.phase='leave';
+      }
+    }else{ d.y-=DRONE_SPEED*dt; d.x+=Math.sin(d.a)*dt*30; if(d.y<-60)d.dead=true; }
+  }
+  S.drones=S.drones.filter(d=>!d.dead);
+}
+const BOOST={reserve:{el:document.getElementById('bReserve'),use:useReserve,cd:'cdReserve',lvl:2},
+             drone:{el:document.getElementById('bDrone'),use:useDrones,cd:'cdDrone',lvl:2},
+             tech:{el:document.getElementById('bTech'),use:useTech,cd:'cdTech',lvl:3}};
+for(const k in BOOST)BOOST[k].el.onclick=BOOST[k].use;
+function paintLocks(){
+  for(const k in BOOST){const b=BOOST[k],on=hasB(k),sub=b.el.querySelector('.sub');
+    b.el.classList.toggle('locked',!on);
+    const live={reserve:`${MODS.reserveN} לוחמים`,drone:`${MODS.droneCount} חוליות`,tech:sub.dataset.sub}[k];
+    sub.textContent=on?live:(k==='drone'&&MODS.dronesBanned&&LV.boosters.includes(k)?'אמברגו נשק':`נפתח בשלב ${b.lvl}`);}
+}
+function paintBoosts(){
+  for(const k in BOOST){const b=BOOST[k],el=b.el,on=hasB(k),cd=S.cd[k],c=el.querySelector('.cd');
+    el.disabled=!on||!running;
+    el.classList.toggle('ready',on&&canAct()&&cd<=0);
+    el.classList.toggle('on',k==='tech'&&S.techT>0);
+    if(on&&cd>0){c.hidden=false;c.textContent=Math.ceil(cd);c.style.setProperty('--p',(cd/(S.cdMax[k]||LV[b.cd])*100)+'%')}else c.hidden=true;}
+}
+
+// ---------- sites: ranches get built, then need guards ----------
+function updateSites(dt){
+  for(const s of S.sites){
+    if(s.state==='destroyed')continue;
+    if(s.kind==='ranch'&&s.state!=='up'){
+      if(s.state==='wait'&&(LV.tut==='basics'?S.t:S.playTime)>=s.at){s.state='build';s.bt=0;toast('בונים חווה חדשה…','warn')}
+      if(s.state==='build'){s.bt+=dt;
+        if(s.bt>=BUILD_TIME){s.state='up';s.g.hidden=false;S.ranchesUp++;s.pop=0;
+          S.fx.push({type:'ripple',x:s.g.x,y:s.g.y,t:0,d:1.6,c:C.warn});
+          if(LV.tut!=='basics')toast('חווה חדשה! שלחו כוח שמירה','warn');}}
+      continue;
+    }
+    s.pop=Math.min(1,s.pop+dt*2.5);
+    const g=s.g, below=g.troops<thr(g);
+    if(below){
+      if(s.warn===null){s.warn=s.secured?LV.warnSettlement:LV.warnRanch;s.warnMax=s.warn}
+      if(siteThreatsActive())s.warn=Math.max(0,s.warn-dt);
+      if(siteThreatsActive()&&s.warn===0&&!s.sneak)spawnSneak(s);
+    }else{ s.warn=null; s.secured=true; }
+    if(s.sneak){
+      const q=s.sneak,dx=s.x-q.x,dy=s.y-q.y,L=Math.hypot(dx,dy);
+      if(L<160){startCinematic('farm',q,s);return;}
+      q.x+=dx/L*SNEAK_SPEED*dt;q.y+=dy/L*SNEAK_SPEED*dt;
+    }
+  }
+}
+function spawnSneak(s){
+  const en=S.nodes.filter(n=>n.owner==='E'&&!n.hidden).sort((a,b)=>dist(a,s)-dist(b,s))[0];
+  s.sneak=en?{x:en.x,y:en.y}:{x:s.x,y:-20};
+  toast(s.kind==='ranch'?'חוליית חדירה בדרך לחווה!':'חוליית חדירה בדרך ליישוב!','bad');
+}
+function breach(s,why){loseTo(s.x,s.y,why)}
+function loseTo(x,y,why){
+  if(S.over)return;
+  S.over=true;S.endAt=S.t+1.4;S.win=false;S.why=why;S.hand=null;hideGeneral();
+  for(let i=0;i<40;i++)S.fx.push({type:'spark',x,y,vx:(Math.random()-.5)*380,vy:(Math.random()-.5)*380,t:0,d:.9+Math.random()*.6});
+  S.fx.push({type:'blast',x,y,t:0,d:1.2});
+}
+
+// ---------- enemy AI ----------
+function aiStep(dt){
+  if(!LV.ai||!S.aiOn)return;
+  S.ai-=dt;S.harass-=dt;
+  const mine=S.nodes.filter(n=>n.owner==='E'&&!n.hidden);
+  if(!mine.length)return;
+  if(S.ai<=0){
+    S.ai=rr(LV.ai);
+    let best=null;
+    for(const s of mine){ if(avail(s)<10)continue; const sendN=Math.floor(avail(s)*LV.aiFrac);
+      for(const t of S.nodes){ if(t.owner==='E'||t.hidden||t.kind==='guard'||(s.sector&&t.sector!==s.sector))continue;
+        const d=dist(s,t),tt=d/enemySpeed(),def=t.troops+(t.owner==='P'?t.grow*growMul('P')*tt:0);
+        const incoming=incomingP(t);if(sendN<=def+incoming+LV.aiMargin)continue;
+        const sc=(sendN-def)-d*.03+(t.owner==='N'?4:0)+(t.kind==='base'?3:0);
+        if(sc>0&&(!best||sc>best.sc))best={s,t,sc,sendN};}}
+    if(best)send(best.s,best.t,best.sendN);
+    else{
+      const front=mine.slice().sort((a,b)=>b.y-a.y)[0], rear=mine.find(n=>n!==front&&n.troops>=n.cap*.9);
+      if(rear&&front)send(rear,front,Math.floor(avail(rear)*.7));
+    }
+  }
+  if(S.harass<=0){
+    S.harass=rr(LV.harassEvery);
+    const guards=S.nodes.filter(n=>n.kind==='guard'&&!n.hidden&&n.troops>0);
+    if(!guards.length)return;
+    const g=guards[Math.floor(Math.random()*guards.length)];
+    const src=mine.filter(n=>!g.sector||n.sector===g.sector).sort((a,b)=>dist(a,g)-dist(b,g))[0];if(!src)return;
+    const n=Math.min(Math.round(g.cap*LV.harassFrac),avail(src)-3);
+    if(n>=3)send(src,g,n);
+  }
+}
+
+// ---------- tutorial scripts ----------
+function strongest(){return fieldP().sort((a,b)=>b.troops-a.troops)[0]}
+function nearestP(t){return fieldP().filter(n=>n.troops>=t.troops+2).sort((a,b)=>dist(a,t)-dist(b,t))[0]||strongest()}
+const TUT={
+ basics:[
+  {enter(){S.frozen=true;S.cam={x:350,y:880,z:1.35};S.camTo={...S.cam};S.hand={a:byId('b1'),b:byId('g0')};
+     say('רואה את ההתיישבות שם? זו חומש. אנחנו חייבים להציב שם 15 חיילים קבוע, להגנה על היישוב.')},
+   done:()=>byId('g0').troops>=thr(byId('g0'))&&incomingP(byId('g0'))===0},
+  {enter(){S.frozen=true;S.camTo={x:W/2,y:H/2,z:1};
+     for(const n of S.nodes)if(n.owner==='E'&&n.hidden){n.hidden=false;S.fx.push({type:'ripple',x:n.x,y:n.y,t:0,d:1.4,c:C.E})}
+     S.hand=()=>{const t=['n1','n2'].map(byId).find(n=>n.owner!=='P');return t?{a:nearestP(t),b:t}:null};
+     say('עכשיו אנחנו צריכים לדאוג שאף בן זונה לא מתכוון להתפוצץ עלינו מאחת הגבעות כאן. תפוס ת׳שטח.')},
+   done:()=>['n1','n2'].some(id=>byId(id).owner==='P')},
+  {enter(){S.frozen=true;
+     S.hand=()=>{const t=S.nodes.filter(n=>n.owner==='E').sort((a,b)=>a.troops-b.troops)[0];return t?{a:strongest(),b:t}:null};
+     say('עכשיו בוא נפנה מכאן את שאר הנבלות.')},
+   done:()=>S.aiOn},
+  {enter(){S.hand=null;S.sites[1].at=S.t+10},
+   done:()=>S.sites[1].state==='up'&&!S.focus},
+  {enter(){S.frozen=true;S.hand={a:strongest(),b:byId('r0')};say('בונים פה חווה חדשה. גם היא צריכה חיילים קבוע, מיד. שלח לשם כוח.')},
+   done:()=>incomingP(byId('r0'))>0||byId('r0').troops>=thr(byId('r0'))},
+  {enter(){S.hand=null;S.frozen=false;S.tutDone=true;hideGeneral()}}
+ ],
+ special:[
+  {enter(){say('הפעם האויב חזק יותר, אבל יש תגבורת: מילואים ורחפנים, בתחתית המסך. כל אחד צריך זמן טעינה בין שימוש לשימוש.',{pause:true,hintBar:true})}}
+ ],
+ tech:[
+  {enter(){say('קיבלנו מערכת איתור. לחיצה עוצרת את כל החוליות המיוחדות וחושפת אותן לכמה שניות, כך שקל לתפוס אותן.',{pause:true,hintBar:true})}}
+ ],
+};
+function runTutorial(){
+  const steps=TUT[LV.tut];if(!steps||S.tutI>=steps.length)return;
+  const st=steps[S.tutI];
+  if(!st.entered){st.entered=true;st.enter()}
+  if(!st.done||st.done())S.tutI++;
+}
+
+// ---------- main update ----------
+function update(dt){
+  S.rt+=dt;if(tickOpeningConstruction(dt))return;
+  for(const f of S.fx){f.t+=dt;if(f.type==='spark'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.96;f.vy*=.96}}
+  S.fx=S.fx.filter(f=>f.t<f.d);
+  camStep(dt);
+  if(S.cinematic){tickCinematic(dt);return;}
+  if(S.incident)return;
+  if(S.focus){const f=S.focus;f.t+=dt;if(!f.out&&f.t>=.6+f.hold){f.out=true;S.camTo=f.back}if(f.t>=1.3+f.hold){S.focus=null;f.cb&&f.cb()}return}
+  if(S.paused)return;
+  if(!S.over&&!deploymentStep())runTutorial();
+  if(S.focus||S.paused)return;
+  // Only wait for input before combat, after all dispatched troops have arrived.
+  // Later tutorial hints must not halt an active battle or its result screen.
+  if(!S.over&&S.frozen){ // tutorial: nothing moves until the player does what the hand shows, but an unmanned post still shows its timer
+    for(const x of S.sites)if(x.state==='up'&&x.warn===null&&x.g.troops<thr(x.g)){x.warn=x.secured?LV.warnSettlement:LV.warnRanch;x.warnMax=x.warn}
+    return}
+  if(!S.over&&powerupLesson(dt))return;
+  S.t+=dt;
+  if(!S.over){for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.techT=Math.max(0,S.techT-dt)}
+  for(const n of S.nodes){
+    if(n.hidden)continue;
+    const g=n.grow*(S.deployment?0:growMul(n.owner));
+    if(n.owner!=='N'&&n.troops<n.cap)n.troops=Math.min(n.cap,n.troops+g*dt);
+    if(n.troops>n.cap)n.troops=Math.max(n.cap,n.troops-2*dt);
+    n.flash=Math.max(0,n.flash-dt);
+  }
+  emit(dt);
+  for(const u of S.units){
+    if(u.dead)continue;
+    if(u.sq){ // chasing a special squad: home in while visible, go to the last-seen spot while hidden
+      const q=u.sq;
+      if(q.dead){u.sq=null;u.dst=homeFor(u);if(!u.dst)u.dead=true;continue}
+      const member=q.isArmy?S.units.filter(v=>v.army===q&&!v.dead).sort((a,b)=>dist(a,u)-dist(b,u))[0]:null;
+      const tx=member?member.x:q.up?q.x:q.lastX,ty=member?member.y:q.up?q.y:q.lastY,dx=tx-u.x,dy=ty-u.y,L=Math.hypot(dx,dy);
+      if(L>3){const m=Math.min(L,UNIT_SPEED*dt);u.x+=dx/L*m;u.y+=dy/L*m}
+      continue;
+    }
+    const t=u.dst,dx=t.x-u.x,dy=t.y-u.y,L=Math.hypot(dx,dy);
+    if(L<t.r*.8){u.dead=true;arrive(u);if(S.incident)break;continue}
+    const sp=u.o==='P'?UNIT_SPEED*MODS.speedMul:enemySpeed();u.x+=dx/L*sp*dt;u.y+=dy/L*sp*dt;}
+  if(S.incident)return;
+  const us=S.units;
+  for(let i=0;i<us.length;i++){const a=us[i];if(a.dead)continue;
+    for(let j=i+1;j<us.length;j++){const b=us[j];if(b.dead||b.o===a.o)continue;
+      if(Math.abs(a.x-b.x)<13&&Math.abs(a.y-b.y)<13){a.dead=b.dead=true;S.lost++;S.enemyLost++;S.fx.push({type:'pop',x:(a.x+b.x)/2,y:(a.y+b.y)/2,t:0,d:.3});break}}}
+  updateDrones(dt);
+  if(!S.over&&!S.deployment){checkEnd();if(S.over)return;updateSpecials(dt);if(S.incident||S.cinematic)return;updateSites(dt);if(S.incident||S.cinematic)return;aiStep(dt);}
+  S.units=S.units.filter(u=>!u.dead);refreshArmies();
+  if(!S.over)checkEnd();
+  if(S.over&&S.t>=S.endAt&&!S.shown)showEnd();
+}
+function canAfford(){
+  const h=typeof S.hand==='function'?S.hand():S.hand;if(!h||!h.b)return false;
+  const need=h.b.kind==='guard'?thr(h.b)-h.b.troops:h.b.troops+2;
+  return fieldP().reduce((a,n)=>a+avail(n),0)>=need;
+}
+function checkEnd(){
+  const field=S.nodes.filter(n=>!n.hidden&&n.kind!=='guard');
+  const clear=field.every(n=>n.owner==='P')&&S.sites.every(x=>x.state==='destroyed'||(x.state==='up'&&x.g.troops>=thr(x.g)))&&!S.units.some(u=>u.o==='E')&&!S.specials.some(q=>!q.civ);
+  if(clear&&(LV.tut!=='basics'||S.tutDone)){S.over=true;S.win=true;S.endAt=S.t+1.8;S.why='כל השטח בשליטתכם';S.hand=null;return}
+  const hasForce=field.some(n=>n.owner==='P')||S.units.some(u=>u.o==='P')||S.nodes.some(n=>n.kind==='guard'&&!n.hidden&&n.troops>=1);
+  if(!hasForce){S.over=true;S.win=false;S.endAt=S.t+.6;S.why='כל הכוחות אבדו';}
+}
+
+// ---------- territories: every point owns the land around it, tinted in its owner's colour ----------
+const GW=240,GH=426,terr={key:'',okey:'',lab:null,nodes:null,cv:document.createElement('canvas')};terr.cv.width=GW;terr.cv.height=GH;
+const TINT={P:[64,80,26,118],E:[196,59,44,84],N:[255,250,235,42],Z:[58,123,213,105]};
+const ZONE_EDGE=[28,78,170,220];
+function inZone(st,px,py){
+  const big=st.kind==='settlement',cy=big?st.y-20:st.y,ry=Math.max(30,cy-st.g.y),rx=big?150:64,a=big?34:14;
+  const wx=px+(fbm(px/90+7,py/90)-.5)*a*2,wy=py+(fbm(px/90,py/90+13)-.5)*a*2;
+  return ((wx-st.x)/rx)**2+((wy-cy)/ry)**2<=1}
+function updateTerritory(){
+  const ns=S.nodes.filter(n=>!n.hidden&&n.kind!=='guard'),zs=S.sites.filter(x=>x.state==='up'),key=LI+':'+ns.map(n=>n.id).join(',')+'|'+zs.map(s=>s.g.id).join(',');
+  if(key!==terr.key){
+    terr.key=key;terr.okey='';terr.nodes=ns;const lab=new Int16Array(GW*GH);SEED=91+LI;
+    for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){
+      const px=(x+.5)*W/GW,py=(y+.5)*H/GH,i=y*GW+x;
+      if(py>BORDER_Y){lab[i]=-1;continue}
+      const zi=zs.findIndex(z=>inZone(z,px,py));if(zi>=0){lab[i]=-2-zi;continue}
+      // warp the sample point so borders wander like ridgelines instead of straight cuts
+      const wx=px+(fbm(px/150,py/150)-.5)*120,wy=py+(fbm(px/150+31,py/150-17)-.5)*120;
+      let b=0,bd=1e9;for(let k=0;k<ns.length;k++){const d=Math.hypot(ns[k].x-wx,ns[k].y-wy)-ns[k].r*.5;if(d<bd){bd=d;b=k}}
+      lab[i]=b;
+    }
+    terr.lab=lab;terr.zones=zs;
+  }
+  const filled=z=>z.g.troops>=thr(z.g);
+  const okey=terr.nodes.map(n=>n.owner).join('')+'|'+terr.zones.map(z=>filled(z)?1:0).join('');
+  if(okey===terr.okey)return;terr.okey=okey;
+  const g=terr.cv.getContext('2d'),img=g.createImageData(GW,GH),lab=terr.lab,ns2=terr.nodes;
+  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){
+    const i=y*GW+x,l=lab[i];if(l===-1)continue;
+    if(l<=-2){ // settlement / farm area: blue until its guard quota is filled, then army colour; always a closed blue edge
+      const z=terr.zones[-2-l];let edgeZ=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=GW||yy>=GH)continue;if(lab[yy*GW+xx]!==l)edgeZ=true}
+      img.data.set(edgeZ?ZONE_EDGE:(filled(z)?TINT.P:TINT.Z),i*4);continue}
+    const o=ns2[l].owner;let c=TINT[o];
+    let edge=0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=GW||yy>=GH)continue;const l2=lab[yy*GW+xx];
+      if(l2>=0&&l2!==l)edge=Math.max(edge,ns2[l2].owner!==o?2:1)}
+    if(edge===2)c=[28,26,18,170];else if(edge===1)c=[c[0]*.6,c[1]*.6,c[2]*.6,c[3]+40];
+    img.data.set(c,i*4);
+  }
+  g.putImageData(img,0,0);
+}
+
+// ---------- drawing ----------
+function draw(){
+  const cam=camera();
+  ctx.setTransform(scale*dpr,0,0,scale*dpr,0,0);
+  ctx.translate(W/2,H/2);ctx.scale(cam.z,cam.z);ctx.translate(-cam.cx,-cam.cy);
+  ctx.drawImage(terrain,0,0);
+  updateTerritory();ctx.imageSmoothingEnabled=true;ctx.drawImage(terr.cv,0,0,W,H);
+  const pulse=reduced?0:Math.sin(S.rt*8);
+  for(const v of LV.villages||[]){
+    for(const[hx,hy]of[[-22,-6],[0,-14],[20,-4],[-10,10],[14,12]]){ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(v.x+hx-7,v.y+hy-5,16,13);ctx.fillStyle='#e9e4d6';ctx.fillRect(v.x+hx-8,v.y+hy-7,16,13);ctx.fillStyle='#bdb6a3';ctx.fillRect(v.x+hx-8,v.y+hy-7,16,3)}
+    label('כפר',v.x,v.y+30,11);
+  }
+  for(const s of S.sites){ if(s.kind==='ranch'&&s.state==='wait')continue; if(s.state==='build')drawBuild(s);else drawSite(s); }
+  if(S.drag&&S.pointer){
+    const tgt=targetAt(S.pointer),ok=tgt&&!S.sel.includes(tgt);
+    ctx.save();ctx.setLineDash([10,9]);ctx.lineWidth=5;ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,.85)';
+    for(const s of S.sel){ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(ok?tgt.x:S.pointer.x,ok?tgt.y:S.pointer.y);ctx.stroke();}
+    ctx.restore();
+    if(ok){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(tgt.x,tgt.y,tgt.r+10,0,7);ctx.stroke();}
+  }
+  for(const u of S.units){ctx.fillStyle=RING[u.o];ctx.beginPath();ctx.arc(u.x,u.y,5.5,0,7);ctx.fill();ctx.fillStyle=FILL[u.o];ctx.beginPath();ctx.arc(u.x,u.y,4,0,7);ctx.fill();}
+  for(const n of S.nodes){if(n.hidden)continue;drawNode(n,pulse);}
+  for(const s of S.sites){ if(!s.sneak)continue; const k=s.sneak;
+    ctx.save();ctx.setLineDash([4,8]);ctx.strokeStyle='rgba(122,28,18,.7)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(k.x,k.y);ctx.lineTo(s.x,s.y);ctx.stroke();ctx.restore();
+    for(let i=0;i<4;i++){const a=i*Math.PI/2+S.rt*3;ctx.fillStyle='#2b0d08';ctx.beginPath();ctx.arc(k.x+Math.cos(a)*7,k.y+Math.sin(a)*7,5,0,7);ctx.fill();
+      ctx.fillStyle=C.E;ctx.beginPath();ctx.arc(k.x+Math.cos(a)*7,k.y+Math.sin(a)*7,3,0,7);ctx.fill();}
+  }
+  drawSpecials(pulse);
+  drawDrones();
+  for(const f of S.fx){const p=f.t/f.d;ctx.save();
+    if(f.type==='ring'){ctx.globalAlpha=1-p;ctx.strokeStyle=f.c;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,30+p*40,0,7);ctx.stroke();}
+    else if(f.type==='ripple'){for(let i=0;i<3;i++){const q=(p+i*.25)%1;ctx.globalAlpha=(1-q)*.9;ctx.strokeStyle=f.c||C.warn;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,24+q*70,0,7);ctx.stroke();}}
+    else if(f.type==='pop'){ctx.globalAlpha=1-p;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(f.x,f.y,3+p*6,0,7);ctx.fill();}
+    else if(f.type==='spark'){ctx.globalAlpha=1-p;ctx.fillStyle=p<.4?'#ffd36a':C.roof;ctx.beginPath();ctx.arc(f.x,f.y,4*(1-p)+1,0,7);ctx.fill();}
+    else if(f.type==='blast'){const R=(f.small?20:40)+p*(f.small?60:120);ctx.globalAlpha=(1-p)*.8;const gr=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,R);gr.addColorStop(0,'#fff3c4');gr.addColorStop(.4,'#ff9a2e');gr.addColorStop(1,'rgba(160,40,10,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(f.x,f.y,R,0,7);ctx.fill();}
+    ctx.restore();}
+  drawArmies();drawHand();drawSquadArrow();
+}
+function drawHand(){
+  const h=typeof S.hand==='function'?S.hand():S.hand;if(!h||!h.a||!h.b||S.focus)return;
+  if(!S.paused&&incomingP(h.b)>0)return; // the player already acted
+  const T=1.6,p=(S.rt%T)/T,q=clamp((p-.15)/.65,0,1),k=q*q*(3-2*q);
+  const x=lerp(h.a.x,h.b.x,k),y=lerp(h.a.y,h.b.y,k);
+  ctx.save();
+  ctx.globalAlpha=p<.08?p/.08:p>.9?(1-p)/.1:1;
+  ctx.setLineDash([8,8]);ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(h.a.x,h.a.y);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(x,y,16,0,7);ctx.fill();
+  ctx.drawImage(HAND,x-22*1.1,y-4*1.1,64*1.1,72*1.1);
+  ctx.restore();
+}
+function drawSpecials(pulse){
+  for(const q of S.specials){
+    if(q.dead)continue;
+    const frozen=S.techT>0,px=q.up?q.x:q.lastX,py=q.up?q.y:q.lastY;
+    // where it is heading is always shown, so nothing comes out of nowhere
+    const tx=q.phase==='cross'?q.x:q.target?.x,ty=q.phase==='cross'?H:q.target?.y;
+    if(q.civ&&tx!==undefined){ctx.save();ctx.setLineDash([3,9]);ctx.lineCap='round';ctx.strokeStyle=q.civ?'rgba(40,100,200,.6)':'rgba(120,30,140,.55)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(tx,ty);ctx.stroke();ctx.restore();}
+    if(!q.up){ // hidden: last-seen marker
+      ctx.save();ctx.globalAlpha=.75;ctx.setLineDash([5,6]);ctx.strokeStyle=C.special;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(px,py,18+pulse*2,0,7);ctx.stroke();
+      ctx.fillStyle=C.special;ctx.font=`700 18px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',px,py+1);ctx.restore();
+      continue;
+    }
+    ctx.save();ctx.translate(q.x,q.y);
+    ctx.strokeStyle=q.civ?'rgba(90,160,255,.6)':'rgba(200,107,220,.6)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,24+pulse*2.5,0,7);ctx.stroke();
+    ctx.rotate(Math.PI/4);ctx.fillStyle=q.civ?'#2f6dbb':C.special;ctx.strokeStyle=q.civ?'#fff':C.E;ctx.lineWidth=3.5;ctx.beginPath();ctx.roundRect(-15,-15,30,30,5);ctx.fill();ctx.stroke();
+    ctx.rotate(-Math.PI/4);ctx.fillStyle='#fff';ctx.font=`700 15px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(q.n,0,1);
+    if(q.phase==='linger'){ctx.strokeStyle=C.warn;ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,30,-Math.PI/2,-Math.PI/2+(q.lt/q.lmax)*Math.PI*2);ctx.stroke();}
+    if(frozen){ctx.strokeStyle=C.tech;ctx.lineWidth=2;for(let i=0;i<4;i++){const a=i*Math.PI/4+S.rt;ctx.beginPath();ctx.moveTo(Math.cos(a)*30,Math.sin(a)*30);ctx.lineTo(-Math.cos(a)*30,-Math.sin(a)*30);ctx.stroke()}
+      ctx.beginPath();ctx.arc(0,0,30,0,7);ctx.stroke();}
+    ctx.restore();
+    if(q.civ){label(q.phase==='linger'?'חוליית אזרחים · ממתינה':'חוליית אזרחים ישראלים',q.x,q.y+40,12);continue}
+    label(q.phase==='roam'?'חוליה חשודה':q.phase==='linger'?'חוליה מיוחדת · ממתינה':q.phase==='cross'?'חוצה את הגבול!':frozen?'חוליה מיוחדת · נעצרה':'חוליה מיוחדת',q.x,q.y+40,12);
+  }
+}
+function drawDrones(){
+  const tags=new Map();
+  for(const d of S.drones){
+    if(d.phase==='strike'){
+      ctx.save();ctx.strokeStyle='rgba(159,211,199,.55)';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.lineDashOffset=-S.rt*40;
+      ctx.beginPath();ctx.moveTo(d.x,d.y+8);ctx.lineTo(d.tgt.x+(d.slot-1)*10,d.tgt.y);ctx.stroke();ctx.restore();
+      tags.set(d.tgt,(tags.get(d.tgt)||0)+d.dmg);
+    }
+    for(const[ox,oy]of[[0,-10],[-14,7],[14,7]])quad(d.x+ox,d.y+oy,d.a);
+  }
+  for(const[n,dmg]of tags){
+    ctx.font=`700 15px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const x=n.x+n.r+16,y=n.y-n.r-4;ctx.fillStyle='rgba(20,18,14,.8)';ctx.beginPath();ctx.roundRect(x-20,y-11,40,22,11);ctx.fill();
+    ctx.fillStyle=C.drone;ctx.fillText('−'+Math.floor(dmg),x,y+1);
+  }
+}
+function quad(x,y,a){
+  ctx.save();ctx.translate(x,y);ctx.scale(1.45,1.45);
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(3,14,6,2.5,0,0,7);ctx.fill();
+  ctx.strokeStyle='#22262a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-5);ctx.lineTo(5,5);ctx.moveTo(5,-5);ctx.lineTo(-5,5);ctx.stroke();
+  ctx.fillStyle='rgba(200,230,222,.55)';for(const[px,py]of[[-5,-5],[5,-5],[-5,5],[5,5]]){ctx.beginPath();ctx.ellipse(px,py,3.6,1.4+Math.abs(Math.sin(a*9))*1.2,0,0,7);ctx.fill()}
+  ctx.fillStyle=C.drone;ctx.fillRect(-2.5,-2.5,5,5);
+  ctx.restore();
+}
+function drawBuild(s){
+  const p=Math.min(1,s.bt/BUILD_TIME),x=s.x,y=s.y;
+  ctx.save();
+  ctx.strokeStyle='rgba(90,64,36,.8)';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.ellipse(x,y+2,40,22,0,0,7);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#8a6a3e';ctx.lineWidth=2.5;const hgt=6+p*14;
+  for(const ox of[-16,16])ctx.strokeRect(x+ox-10,y+6-hgt,20,hgt);
+  // time-management style badge: progress ring + bobbing hammer
+  const bx=x,by=y-58;
+  ctx.fillStyle='rgba(28,26,21,.88)';ctx.beginPath();ctx.arc(bx,by,26,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(bx,by,21,0,7);ctx.stroke();
+  ctx.strokeStyle=C.warn;ctx.beginPath();ctx.arc(bx,by,21,-Math.PI/2,-Math.PI/2+p*Math.PI*2);ctx.stroke();
+  ctx.translate(bx,by);ctx.rotate(-.5+(reduced?0:Math.sin(S.rt*12))*.45);
+  ctx.fillStyle='#c9a46a';ctx.fillRect(-2,-2,4,16);ctx.fillStyle='#d8d8d8';ctx.fillRect(-9,-9,18,8);
+  ctx.restore();
+  label('בונים חווה',x,y+34,13);
+}
+function drawSite(s){
+  const k=s.pop<1?easeBack(s.pop):1;
+  ctx.save();ctx.translate(s.x,s.y);ctx.scale(k,k);
+  const houses=s.kind==='settlement'?[[-52,-8],[-22,-20],[10,-14],[42,-4],[-38,20],[-6,14],[26,22],[56,26]]:[[-16,-2],[16,4]];
+  ctx.fillStyle='rgba(240,228,196,.55)';ctx.beginPath();
+  if(s.kind==='settlement')ctx.ellipse(0,4,86,44,0,0,7);else ctx.ellipse(0,2,40,22,0,0,7);ctx.fill();
+  for(const[hx,hy]of houses){
+    ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(hx-9,hy-4,20,14);
+    ctx.fillStyle='#f6f1e4';ctx.fillRect(hx-10,hy-6,20,13);
+    ctx.fillStyle=C.roof;ctx.beginPath();ctx.moveTo(hx-12,hy-5);ctx.lineTo(hx,hy-15);ctx.lineTo(hx+12,hy-5);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+  label(s.kind==='settlement'?(s.title||`התיישבות · ${s.residents}`):`חווה · ${s.residents}`,s.x,s.y+(s.kind==='settlement'?62:34),14);
+}
+const easeBack=t=>{const c=1.7;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)};
+function label(txt,x,y,size){
+  ctx.font=`500 ${size}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction='rtl';
+  const w=ctx.measureText(txt).width+14;
+  ctx.fillStyle='rgba(28,26,21,.74)';ctx.beginPath();ctx.roundRect(x-w/2,y-11,w,22,11);ctx.fill();
+  ctx.fillStyle='#f4efe2';ctx.fillText(txt,x,y+1);ctx.direction='ltr';
+}
+function drawNode(n,pulse){
+  const r=n.r;
+  ctx.save();
+  ctx.fillStyle='rgba(30,20,5,.3)';ctx.beginPath();ctx.ellipse(n.x+3,n.y+6,r,r*.9,0,0,7);ctx.fill();
+  if(n.kind==='guard'){
+    const s=guardSite(n), t=thr(n), low=n.troops<t;
+    ctx.strokeStyle='rgba(28,78,170,.7)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(n.x,n.y+r);ctx.lineTo(s.x,s.y-12);ctx.stroke();
+    // unmanned: looks like a plain white point (plus its timer); manned: army khaki with a blue ring
+    if(!low){ctx.strokeStyle='#2f6dd0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(n.x,n.y,r+8,0,7);ctx.stroke();}
+    ctx.fillStyle=low?FILL.N:FILL.P;ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();
+    if(n.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();}
+    ctx.strokeStyle=low?RING.N:RING.P;ctx.lineWidth=4;ctx.beginPath();ctx.arc(n.x,n.y,r-1,0,7);ctx.stroke();
+    ctx.fillStyle=low?TXT.N:'#fff';ctx.font=`700 ${r>32?26:21}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.direction='ltr';
+    ctx.fillText(Math.floor(n.troops),n.x,n.y+2);
+    if(low&&s.warn!==null){
+      const active=siteThreatsActive(), urgent=s.warn<=10;
+      ctx.lineWidth=7;ctx.strokeStyle='rgba(20,18,14,.65)';ctx.beginPath();ctx.arc(n.x,n.y,r+9,0,Math.PI*2);ctx.stroke();
+      if(s.warn>0){ctx.strokeStyle=active?(urgent?C.E:C.warn):'#c4bba3';ctx.beginPath();ctx.arc(n.x,n.y,r+9,-Math.PI/2,-Math.PI/2+(s.warn/s.warnMax)*Math.PI*2);ctx.stroke();}
+      if(active&&s.warn===0)label('חדירה בדרך!',n.x,n.y-r-34,18);
+      const bx=n.x+r+20,by=n.y-r-3,br=14+(s.warn===0?pulse*2:pulse);
+      ctx.fillStyle=s.warn===0?C.E:C.warn;ctx.beginPath();ctx.arc(bx,by,br,0,7);ctx.fill();
+      ctx.strokeStyle='#1f1d17';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#1f1d17';ctx.font=`800 19px ${FONT}`;ctx.fillText('!',bx,by+1);
+
+    }
+  }else{
+    // a base a special squad is heading for shows its 80% safe line
+    if(n.owner==='P'&&S.specials.some(q=>q.target===n)){
+      const f=Math.min(1,n.troops/n.cap),safe=f>=MODS.crossAt,R=r+11;
+      ctx.lineWidth=6;ctx.strokeStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(n.x,n.y,R,0,7);ctx.stroke();
+      ctx.strokeStyle=safe?'#bfe0ff':C.E;ctx.beginPath();ctx.arc(n.x,n.y,R,-Math.PI/2,-Math.PI/2+f*Math.PI*2);ctx.stroke();
+      const a=-Math.PI/2+MODS.crossAt*Math.PI*2;ctx.strokeStyle='#1f1d17';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(n.x+Math.cos(a)*(R-6),n.y+Math.sin(a)*(R-6));ctx.lineTo(n.x+Math.cos(a)*(R+6),n.y+Math.sin(a)*(R+6));ctx.stroke();
+      const pc=Math.round(MODS.crossAt*100);label(safe?`${pc}% · מוגן`:`מתחת ל־${pc}%!`,n.x,n.y-r-24,12);
+    }
+    ctx.fillStyle=FILL[n.owner];ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();
+    if(n.flash>0){ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();}
+    ctx.strokeStyle=RING[n.owner];ctx.lineWidth=n.kind==='base'||n.kind==='hq'?6:4;ctx.beginPath();ctx.arc(n.x,n.y,r-1,0,7);ctx.stroke();
+    if(n.kind==='base'||n.kind==='hq'){ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,r-10,0,7);ctx.stroke();}
+    if(n.kind==='post'||n.kind==='outpost'){ctx.fillStyle=n.owner==='N'?'rgba(58,54,44,.25)':'rgba(255,255,255,.25)';ctx.fillRect(n.x-3,n.y-r+5,6,9);}
+    ctx.fillStyle=TXT[n.owner];ctx.font=`700 ${r>40?26:21}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(Math.floor(n.troops),n.x,n.y+2);
+    label(n.owner==='N'?'נק׳ שמירה':KIND[n.kind].label,n.x,n.y+r+14,12);
+  }
+  if(S.armed===n){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.setLineDash([6,6]);ctx.lineDashOffset=-S.rt*30;ctx.beginPath();ctx.arc(n.x,n.y,r+9,0,7);ctx.stroke();}
+  if(S.sel.includes(n)&&S.drag){ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.setLineDash([]);ctx.beginPath();ctx.arc(n.x,n.y,r+7,0,7);ctx.stroke();}
+  ctx.restore();
+}
+
+// ---------- input ----------
+function toLogical(e){const b=cv.getBoundingClientRect(),c=camera(),sx=(e.clientX-b.left)/b.width*W,sy=(e.clientY-b.top)/b.height*H;return{x:(sx-W/2)/c.z+c.cx,y:(sy-H/2)/c.z+c.cy}}
+function nodeAt(p){let best=null,bd=1e9;for(const n of S.nodes){if(n.hidden)continue;const d=Math.hypot(n.x-p.x,n.y-p.y);if(d<n.r+22&&d<bd){bd=d;best=n}}return best}
+function targetAt(p){ // Intercept a visible moving force.
+  refreshArmies();
+  for(const a of S.armies||[])if(a.up&&(dist(a,p)<32||a.members.some(u=>dist(u,p)<24)))return a;
+  for(const q of S.specials)if(q.up&&Math.hypot(q.x-p.x,q.y-p.y)<38)return q;
+  return nodeAt(p);
+}
+let downNode=null,downP=null,moved=false;
+cv.addEventListener('pointerdown',e=>{
+  if(MODE==='budget'){budgetDown(e);return}
+  if(!canAct())return;
+  const p=toLogical(e),t=targetAt(p);
+  if(!t&&S.cam.z>1.05){S.pan={x:e.clientX,y:e.clientY,cx:S.camTo.x,cy:S.camTo.y};cv.setPointerCapture(e.pointerId);return;}
+  if(S.armed&&t&&t!==S.armed){order([S.armed],t);S.armed=null;return}
+  if(t&&!t.isSquad&&t.owner==='P'){S.sel=[t];S.drag=true;downNode=t;downP=p;moved=false;S.pointer=p;cv.setPointerCapture(e.pointerId)}
+  else S.armed=null;
+});
+cv.addEventListener('pointermove',e=>{
+  if(MODE==='budget'){if(BG)BG.pointer=flatLogical(e);return}
+  if(S?.pan){const p=S.pan;S.camTo.x=clamp(p.cx-(e.clientX-p.x)/(scale*S.cam.z),0,W);S.camTo.y=clamp(p.cy-(e.clientY-p.y)/(scale*S.cam.z),0,H);return;}
+  if(!S||!S.drag)return;const p=toLogical(e);S.pointer=p;
+  if(Math.hypot(p.x-downP.x,p.y-downP.y)>16)moved=true;
+  // swiping collects more sources, but guard posts only ever move on their own
+  if(downNode.kind==='guard')return;
+  const n=nodeAt(p);
+  if(moved&&n&&n.owner==='P'&&n.kind!=='guard'&&!S.sel.includes(n)&&Math.hypot(n.x-p.x,n.y-p.y)<n.r)S.sel.push(n);
+});
+cv.addEventListener('pointerup',e=>{
+  if(MODE==='budget'){budgetUp(e);return}
+  if(S?.pan){S.pan=null;return;}
+  if(!S||!S.drag)return;S.drag=false;
+  const p=toLogical(e),t=targetAt(p);
+  if(!moved){S.armed=S.armed===downNode?null:downNode;S.sel=[];return}
+  if(t&&!S.over)order(S.sel.filter(s=>s!==t),t);
+  S.sel=[];
+});
+cv.addEventListener('pointercancel',()=>{if(S){S.pan=null;S.drag=false;S.sel=[]}});
+
+// ---------- HUD ----------
+const toastEl=document.getElementById('toast');let toastT=0;
+function toast(msg,kind=''){toastEl.textContent=msg;toastEl.className=kind;toastEl.style.opacity=1;toastT=2.4}
+const fmt=t=>`${Math.floor(t/60)}:${String(Math.floor(t)%60).padStart(2,'0')}`;
+function hud(dt){
+  if(toastT>0){toastT-=dt;if(toastT<=0)toastEl.style.opacity=0}
+  if(!genEl.hidden)placeGeneral();
+  paintBoosts();
+}
+function showEnd(){
+  S.shown=true;running=false;hideGeneral();
+  if(S.win){showWin();return}
+  const et=document.getElementById('endTitle');
+  et.textContent=S.win?'ניצחון':'הפסד';et.style.color=S.win?'#9cc4f2':'#ff8a7a';
+  document.getElementById('endText').textContent=`${LV.name} · ${LV.region}. ${S.why}.`+(S.civKilled?` במהלך השלב נהרגו ${S.civKilled} אזרחים פלסטינים בתקיפות של אזרחים ישראלים.`:'');
+  const hasNext=S.win&&LI<LEVELS.length-1;
+  document.getElementById('nextBtn').hidden=!hasNext;
+  if(hasNext)document.getElementById('nextLabel').textContent=LEVELS[LI+1].name;
+  document.getElementById('endScreen').hidden=false;
+}
+
+// Real geographic names; stylized game maps, not surveyed borders.
+const BASE_LEVELS=LEVELS.slice(0,2).map(l=>structuredClone(l));
+function makeRegion(sector,index){
+  const l=structuredClone(BASE_LEVELS[1]),gaza=sector==='gaza';
+  const names=gaza?['צפון הרצועה · בית לאהיא','מרכז הרצועה · דיר אל־בלח','דרום הרצועה · חאן יונס']:['הרי שומרון · שכם','בקעת הירדן · יריחו','הר חברון · יטא'];
+  l.name='שלב '+(index+1);l.region=names[index%3];l.sector=sector;l.tut=index===2?'tech':null;
+  l.mapScale=1.25+index*.125;l.enemySpeed=Math.min(88,62+index*3);l.eGrow=.6+index*.08;
+  l.ai=[Math.max(4,8-index*.45),Math.max(6,11-index*.4)];l.aiStart=8;l.aiMargin=3;l.aiFrac=.64;
+  l.warnSettlement=30;l.warnRanch=38;l.boosters=['reserve','drone','tech'];
+  l.special={first:35,every:[Math.max(30,50-index*2),Math.max(40,65-index*2)],linger:6,up:3.6,down:1.2,n:5,speed:65+index*2,max:index>=5?2:1};
+  const shift=(index%3-1)*30;
+  l.nodes.forEach(n=>{n.sector=sector;n.x=clamp(n.x+shift,65,650);if(gaza)n.x=160+n.x*.73;if(n.owner==='E')n.t=Math.min(38,n.t+index);if(n.owner==='P')n.t=30;});
+  l.settlement={...l.settlement,title:gaza?'התיישבות חדשה · נווה חוף':'התיישבות חדשה · גבעת אור',sector};
+  l.ranches=l.ranches.map((r,i)=>({...r,at:20+i*23,sector}));l.extraSlots=l.extraSlots.map(r=>({...r,sector}));
+  l.villages=l.villages.map(v=>({...v,sector}));
+  l.terrain={...l.terrain,seed:12+index*11,arid:gaza?1:(index%3===1?1:.2),coast:gaza,west:gaza?'הים התיכון':l.region.split(' · ')[0],east:gaza?'גבול ישראל':'בקעת הירדן'};
+  if(gaza){l.terrain.road=[[590,1295],[520,1080],[540,850],[470,630],[490,430],[380,220],[370,-20]];l.terrain.wadi=[[-10,670],[140,660],[310,620],[490,700],[730,740]];}
+  const placeNames=[['בית לאהיא','ג׳באליה','עזה'],['נוסייראת','דיר אל־בלח','כיסופים'],['חאן יונס','רפיח','כרם שלום']][index%3];
+  l.terrain.places=gaza?[{x:300,y:165,name:placeNames[0]},{x:480,y:440,name:placeNames[1]},{x:330,y:690,name:placeNames[2]}]:[{x:340,y:165,name:l.region.split(' · ')[1]},{x:90,y:650,name:'כביש 60'}];
+  return l;
+}
+function makeCombined(index){
+  const a=makeRegion('gaza',index),b=makeRegion('wb',index+1);
+  const point=(p,side)=>({...p,x:p.x*.46+(side?386:0),sector:side?'wb':'gaza'});
+  const l={...b,name:'שלב '+(index+1),region:['עזה ושומרון','חאן יונס ובקעת הירדן','רפיח והר חברון'][index-5],sector:'both',tut:null,mapScale:1.875+(index-5)*.125};
+  l.nodes=[...a.nodes.map(n=>point({...n,id:'gz_'+n.id},0)),...b.nodes.map(n=>point({...n,id:'wb_'+n.id},1))];
+  l.settlement={...point(a.settlement,0),gx:a.settlement.gx*.46,gy:a.settlement.gy};
+  l.extraSettlements=[{...point(b.settlement,1),gx:b.settlement.gx*.46+386,gy:b.settlement.gy}];
+  l.ranches=[...a.ranches.slice(0,2).map(r=>point(r,0)),...b.ranches.slice(0,2).map((r,i)=>point({...r,at:32+i*26},1))];
+  l.extraSlots=[...a.extraSlots.map(r=>point(r,0)),...b.extraSlots.map(r=>point(r,1))];
+  l.villages=[...a.villages.map(v=>point(v,0)),...b.villages.map(v=>point(v,1))];
+  l.terrain={...b.terrain,combined:true,coast:true,seed:80+index,west:'רצועת עזה',east:'יהודה ושומרון',places:[{x:160,y:160,name:'רצועת עזה'},{x:550,y:160,name:'יהודה ושומרון'}]};
+  return l;
+}
+function buildCampaignWorlds(seed){
+  const rng=mkRng(seed),first=structuredClone(BASE_LEVELS[0]),second=structuredClone(BASE_LEVELS[1]);
+  first.sector='wb';second.sector='wb';second.settlement.title='התיישבות חדשה · גבעת אור';
+  second.enemySpeed=59;second.eGrow=.64;second.ai=[7,10];second.aiStart=9;second.aiFrac=.65;second.harassEvery=[24,32];second.harassStart=22;second.boosters=['reserve','drone','tech'];
+  second.nodes=second.nodes.filter(n=>n.id!=='e5'&&n.id!=='n4');
+  second.nodes.forEach(n=>{if(n.owner==='E')n.t=Math.max(12,n.t-3);if(n.owner==='P')n.t=40;});
+  second.ranches=second.ranches.slice(0,2).map((r,i)=>({...r,at:35+i*40}));second.special.first=28;second.special.every=[32,44];second.special.speed=52;
+  first.nodes.forEach(n=>n.sector='wb');second.nodes.forEach(n=>n.sector='wb');
+  LEVELS.splice(0,LEVELS.length,first,second,makeRegion('gaza',2),makeRegion(rng()>.5?'gaza':'wb',3),makeRegion(rng()>.5?'gaza':'wb',4),makeCombined(5),makeCombined(6),makeCombined(7));
+  for(const key in terrainCache)delete terrainCache[key];
+  if(typeof terr!=='undefined'){terr.key='';terr.okey='';}
+}
+function decorateTerrain(g,T){
+  if(T.coast){
+    const coast=T.combined?W*.07:W*.17;
+    const sea=g.createLinearGradient(0,0,coast,0);sea.addColorStop(0,'#699d9b');sea.addColorStop(.85,'#8bb4a8');sea.addColorStop(1,'#dcd2a4');
+    g.fillStyle=sea;g.beginPath();g.moveTo(0,0);g.lineTo(coast*.9,0);for(let y=0;y<=H;y+=35)g.lineTo(coast+Math.sin(y/100)*8,y);g.lineTo(0,H);g.fill();
+    g.strokeStyle='#d3e1cf';g.lineWidth=2;for(let y=50;y<H;y+=70){g.beginPath();g.moveTo(12,y);g.quadraticCurveTo(coast*.5,y+12,coast-13,y+2);g.stroke();}
+  }
+  if(T.combined){g.fillStyle='#ece2c0';g.fillRect(W*.485,0,W*.035,H);g.strokeStyle='#7b7159';g.setLineDash([10,12]);g.beginPath();g.moveTo(W*.502,0);g.lineTo(W*.502,H);g.stroke();g.setLineDash([]);}
+  const k=W/720;for(const p of T.places||[]){g.font=`700 ${20*k}px Rubik`;g.textAlign='center';g.fillStyle='#645b43';g.fillText(p.name,p.x*k,p.y*k);}
+}
+function applySitePolicy(){
+  const k=W/720,extra=(LV.extraSettlements||[]).map(x=>({...x}));
+  for(let i=0;i<(MODS.extraSettlements||0);i++){const slot=(LV.extraSlots||[])[i]||(LV.extraSlots||[])[0];if(slot)extra.push({policy:true,x:slot.x+i*90*k,y:slot.y+95*k,gx:slot.x+i*90*k,gy:slot.y,residents:25,cap:15,start:0,sector:slot.sector||LV.sector,title:i?'התיישבות חדשה · גבעת אור':'התיישבות חדשה · נאות גבעה'});}
+  for(const [i,st] of extra.entries()){
+    const g={id:'sg'+i,kind:'guard',owner:'P',x:st.gx,y:st.gy,troops:st.start??st.cap,...KIND.guard,cap:st.cap,sector:st.sector,hidden:false,flash:0,pending:0};
+    if(st.policy)g.requiredGuard=15;S.nodes.push(g);S.sites.push({kind:'settlement',policy:!!st.policy,title:st.title,x:st.x,y:st.y,residents:st.residents,g,warn:null,secured:g.troops>=thr(g),sneak:null,pop:1,state:'up'});
+  }
+  S.sites.forEach(s=>{s.g.sector=s.g.sector||(LV.sector==='both'?(s.x<W/2?'gaza':'wb'):LV.sector);});
+}
+function drawSite(s){
+  if(s.state==='destroyed'){label('נפגע · '+(s.title||'חווה'),s.x,s.y,15);return;}
+  const k=s.pop<1?easeBack(s.pop):1;ctx.save();ctx.translate(s.x,s.y);ctx.scale(k,k);
+  const town=s.kind==='settlement',houses=town?[[-44,-7],[-13,-22],[22,-12],[49,9],[-30,23],[7,24]]:[[-16,0],[20,6]];
+  ctx.fillStyle='#8d995c';ctx.beginPath();ctx.ellipse(0,10,town?82:48,town?44:29,0,0,7);ctx.fill();
+  ctx.strokeStyle='#c3b37c';ctx.lineWidth=7;ctx.beginPath();ctx.ellipse(0,10,town?79:45,town?41:26,0,0,7);ctx.stroke();
+  for(const [x,y]of houses){ctx.fillStyle='#0003';ctx.beginPath();ctx.ellipse(x+4,y+13,18,8,0,0,7);ctx.fill();ctx.fillStyle='#e9ca89';ctx.beginPath();ctx.roundRect(x-13,y-4,27,22,4);ctx.fill();ctx.fillStyle='#fff0c8';ctx.fillRect(x-11,y-3,21,17);ctx.fillStyle='#6ba5b3';ctx.fillRect(x-7,y+2,7,7);ctx.fillStyle='#92754a';ctx.fillRect(x+4,y+5,6,12);ctx.fillStyle='#ad542e';ctx.beginPath();ctx.moveTo(x-17,y-4);ctx.lineTo(x,y-21);ctx.lineTo(x+18,y-4);ctx.lineTo(x+13,y+1);ctx.lineTo(x,y-12);ctx.lineTo(x-12,y+1);ctx.closePath();ctx.fill();ctx.strokeStyle='#ed9e5f';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-14,y-4);ctx.lineTo(x,y-18);ctx.lineTo(x+15,y-4);ctx.stroke();}
+  if(!town){ctx.strokeStyle='#ead49d';ctx.lineWidth=4;for(let x=-35;x<=35;x+=14){ctx.beginPath();ctx.moveTo(x,22);ctx.lineTo(x,34);ctx.stroke();}ctx.beginPath();ctx.moveTo(-37,27);ctx.lineTo(37,27);ctx.stroke();ctx.fillStyle='#e6d381';ctx.beginPath();ctx.ellipse(31,-11,10,7,0,0,7);ctx.fill();}
+  for(const [x,y] of [[-67,6],[62,-7]]){if(!town&&x<0)continue;const tx=town?x:x*.65;ctx.fillStyle='#876748';ctx.fillRect(tx-2,y+2,5,12);ctx.fillStyle='#648949';ctx.beginPath();ctx.arc(tx,y,10,0,7);ctx.fill();ctx.fillStyle='#93b262';ctx.beginPath();ctx.arc(tx-3,y-3,6,0,7);ctx.fill();}
+  if(s.pop<1&&!reduced){ctx.fillStyle='#fff4b5';for(let i=0;i<7;i++){const a=i*6.28/7;ctx.beginPath();ctx.arc(Math.cos(a)*(45+s.pop*45),Math.sin(a)*(25+s.pop*35),3*(1-s.pop),0,7);ctx.fill();}}
+  ctx.restore();label(town?(s.title||`התיישבות · ${s.residents}`):`חווה · ${s.residents}`,s.x,s.y+(town?65:49),15);
+}
+function drawBuild(s){
+ const p=clamp(s.bt/BUILD_TIME,0,1);ctx.save();ctx.globalAlpha=.25+p*.5;drawSite({...s,state:'up',pop:1});ctx.restore();
+ ctx.save();ctx.translate(s.x,s.y-20);ctx.fillStyle='#423b2b22';ctx.beginPath();ctx.ellipse(0,32,39,10,0,0,7);ctx.fill();
+ const phase=reduced?.5:(S.rt*1.4)%1,hit=Math.sin(Math.PI*phase),angle=-1.15+hit*1.65;
+ ctx.save();ctx.translate(8,18);ctx.rotate(angle);ctx.strokeStyle='#654622';ctx.lineWidth=16;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-44);ctx.stroke();ctx.strokeStyle='#d6a86a';ctx.lineWidth=9;ctx.stroke();ctx.fillStyle='#56656a';ctx.beginPath();ctx.roundRect(-23,-59,44,20,5);ctx.fill();ctx.fillStyle='#c7d4cd';ctx.beginPath();ctx.roundRect(-21,-59,40,12,4);ctx.fill();ctx.fillStyle='#e9eee0';ctx.fillRect(-20,-57,9,7);ctx.restore();
+ if(!reduced&&phase>.4&&phase<.62){const f=(phase-.4)/.22;ctx.strokeStyle='#f4df9d';ctx.lineWidth=3;for(let i=0;i<3;i++){const a=-2.5+i*.6;ctx.beginPath();ctx.moveTo(25+Math.cos(a)*(9+f*8),-8+Math.sin(a)*(9+f*8));ctx.lineTo(25+Math.cos(a)*(17+f*13),-8+Math.sin(a)*(17+f*13));ctx.stroke();}}
+ ctx.restore();
+}
+
+const $=id=>document.getElementById(id);
+const DEF_MODS={baseStart:1,civil:false,droneCount:100,droneCdMul:1,droneTimeMul:1,techTimeMul:1,techCdMul:1,reserveN:75,reserveCdMul:1,crossAt:.5,speedMul:1,growMul:1,dronesBanned:false,extraRanches:0,extraSettlements:0,homeProtection:.45,northSafe:true,iranPressure:1,clusterUnlocked:false};
+function freshMeta(seed=Math.floor(Math.random()*1e9)){return {seed,world:75,money:65,unity:70,control:60,territory:{wb:60,gaza:60},years:0,round:0,stock:{reserve:2,drone:2,tech:2,cluster:0},totalP:0,totalE:0,totalCiv:0,israeliCiv:0,settleUnder:0,arcs:{},unlocks:{iran:false,religion:false,pa:false},iranAfter:3,iranCount:0,aidLast:2,aidExplained:false,gameOver:false};}
+let META=freshMeta(),MODS={...DEF_MODS},MODE='game',BG=null,CQ=null,playMode='campaign',LAST_RESULT=null,entry=null,uiEpoch=0,leaderTab='area';
+function saveMeta(){if(playMode==='single')return;try{localStorage.setItem('gvoolt-campaign-v2',JSON.stringify({meta:META,mods:MODS}))}catch{}}
+function stock(k){return META.stock[k]||0;}
+function spend(k){META.stock[k]=Math.max(0,stock(k)-1);saveMeta();}
+function hideSurfaces(){document.getElementById('moneyArrow')?.remove();document.querySelectorAll('.flying-coin').forEach(el=>el.remove());for(const id of ['winScreen','summaryScreen','newsScreen','budgetScreen','cardScreen','iranScreen','impactScreen','runEndScreen','endScreen','budgetGo'])$(id).hidden=true;uiEpoch++;}
+function stageSurface(id,mode){running=false;hideGeneral();hideSurfaces();MODE=mode;bar.style.visibility='hidden';$(id).hidden=false;}
+function waitUI(fn,ms,reading=false){const epoch=uiEpoch;setTimeout(()=>{if(epoch===uiEpoch)fn()},reduced&&!reading?0:ms);}
+function registerBattle(){
+ if(S.accounted)return;S.accounted=true;
+ const sectors=LV.sector==='both'?['wb','gaza']:[LV.sector||'wb'];
+ const from={...META.territory};for(const key of sectors)META.territory[key]=Math.min(100,META.territory[key]+(LV.sector==='both'?4:5));
+ META.control=(META.territory.wb+META.territory.gaza)/2;META.years+=.25;META.round++;
+ META.totalP+=S.lost;META.totalE+=S.enemyLost;META.totalCiv+=S.civKilled;META.israeliCiv+=S.israeliCiv;
+ META.world=clamp(META.world-(S.civKilled?8:0)-2,0,100);
+ LAST_RESULT={sectors,from,to:{...META.territory},p:Math.floor(S.lost/30),e:Math.floor(S.enemyLost/10),civ:S.civKilled,ic:S.israeliCiv,region:LV.region,losses:S.lost};saveMeta();
+}
+function showWin(){registerBattle();stageSurface('winScreen','victory');$('victoryRegion').textContent=LV.region+' · השטח בידינו';}
+$('winNext').onclick=()=>{
+ stageSurface('summaryScreen','summary');$('summaryTitle').textContent=LAST_RESULT.region;
+ $('territorySummary').innerHTML=LAST_RESULT.sectors.map(k=>`<div class="territory-row">${k==='wb'?'יהודה ושומרון':'רצועת עזה'}<b>${LAST_RESULT.from[k]}% ← ${LAST_RESULT.to[k]}%</b><div class="meter"><i class="held" style="width:${LAST_RESULT.from[k]}%"></i><i class="gained" style="width:${LAST_RESULT.to[k]-LAST_RESULT.from[k]}%"></i></div></div>`).join('');
+ $('battleStats').innerHTML=[[LAST_RESULT.e,'לוחמים פלסטינים נהרגו'],[LAST_RESULT.civ,'אזרחים פלסטינים נהרגו'],[LAST_RESULT.p,'חיילים ישראלים נהרגו'],[LAST_RESULT.ic,'אזרחים ישראלים נהרגו']].map(([n,t])=>`<div><b>${n}</b>${t}</div>`).join('');
+};
+$('summaryNext').onclick=showNewspaper;
+const NAMES=['איתי ברק','נועם לביא','עומרי גל','אורי שקד','דניאל ארז','עמית צור','יונתן סלע','רועי לב'];
+function showNewspaper(){
+ stageSurface('newsScreen','news');$('paperDate').textContent=`מהדורה ${META.round} · ${META.years.toFixed(1)} שנים לכהונה`;
+ const stories=[{title:META.world<45?'בירות העולם מקשיחות עמדות':'הישג בשטח, מבחן בזירה המדינית',body:META.world<45?'משלחות דיפלומטיות דורשות תשובות. היקף הסיוע האמריקאי בישיבת התקציב הבאה צפוי להצטמצם.':'שר החוץ מזהיר: הישג צבאי אינו מבטיח תמיכה לאורך זמן. הממשלה מתכנסת לגיבוש המדיניות הבאה.'},
+ {title:META.money<40?'האוצר מזהיר: השמיכה מתקצרת':'מחיר המלחמה מגיע לשולחן הממשלה',body:'הוצאות הביטחון מתחרות במיגון, בציוד ובמילואים. השרים יידרשו להחליט מי יקבל תוספת ומי יסתפק בפחות.'},
+ {title:META.unity<40?'המשפחות דורשות שינוי':'בין הבית לחזית',body:META.unity<40?'שחיקה, ימי מילואים ודרישה לטקסי זיכרון עולים לסדר היום. האמון הציבורי בממשלה מתערער.':'משפחות המילואים מבקשות מענה לנטל המתמשך. נציגת המשפחות צפויה להגיע לישיבת הממשלה.'}];
+ if(LAST_RESULT.civ)stories.splice(1,0,{title:'תקיפת אזרחים: לחץ לעצור את החוליות',body:`${LAST_RESULT.civ} אזרחים פלסטינים נהרגו בתקיפות חוליות אזרחיות. מערכת הביטחון מזהירה מפני פעולות תגמול וחציית הגבול.`});
+ $('newsArticles').innerHTML=stories.map((x,i)=>`<article class="${i===0?'lead':''}">${i<2?`<img src="assets/${i===0?'victory-hero-casual.png':'minister-warm.png'}" alt="איור מערכת">`:''}<h3>${x.title}</h3><p>${x.body}</p></article>`).join('');
+ const n=LAST_RESULT.p;$('fallenReport').textContent=n?`בקרבות בגזרת ${LAST_RESULT.region} נפלו ${n} חיילים. ${NAMES.slice(0,Math.min(n,3)).map((s,i)=>(i?'סמל ':'סמ״ר ')+s).join(', ')}${n>3?' ועוד '+(n-3)+' חיילים.':'.'}`:'לא נרשמו חללים ישראלים במערכה זו.';
+}
+$('newsNext').onclick=()=>{
+ if(checkNationalEnd())return;
+ if(playMode==='single'){showMenu(true);return;}
+ if(META.round>=META.iranAfter){showIran();return;}openBudget();
+};
+function showIran(){
+ stageSurface('iranScreen','iran');META.unlocks.iran=true;META.iranCount++;META.iranAfter=META.round+(META.iranCount===1?2:3);
+ $('iranStats').innerHTML=`<span>מיגון: ${Math.round(MODS.homeProtection*100)}%</span><span>${MODS.northSafe?'החזית הצפונית שקטה':'איום נוסף מצפון'}</span><span>עומס טילים: ${MODS.iranPressure<.8?'מופחת':MODS.iranPressure>1.3?'גבוה':'בינוני'}</span>`;saveMeta();
+}
+$('iranNext').onclick=()=>{if(playMode==='single'){showMenu(true);return;}if(LI===LEVELS.length-1)finishRun('השלמת את רצף המערכות',true);else openBudget();};
+function addLosses(){if(S.accounted)return;S.accounted=true;META.totalP+=S.lost;META.totalE+=S.enemyLost;META.totalCiv+=S.civKilled;META.israeliCiv+=S.israeliCiv;META.years+=Math.min(.24,S.t/1200);}
+function showEnd(){S.shown=true;running=false;hideGeneral();if(S.win){showWin();return;}addLosses();finishRun(S.why||'כל הכוחות אבדו');}
+function breach(s,why){if(s.state==='destroyed')return;s.state='destroyed';s.g.hidden=true;s.sneak=null;loseTo(s.x,s.y,why,s.residents);}
+function loseTo(x,y,why,casualties=20){
+ if(S.over||S.incident)return;S.israeliCiv+=casualties;const fatal=S.israeliCiv>=20;
+ S.incident={fatal,why,x,y};S.over=fatal;S.win=false;S.why=why;S.hand=null;S.focus=null;S.frozen=false;S.camTo={x,y,z:2.4};hideGeneral();
+ S.fx.push({type:'blast',x,y,t:0,d:1.2});$('impactTitle').textContent=fatal?'ההגנה נפרצה':'החווה נפגעה';$('impactText').textContent=why+`. ${casualties} אזרחים נהרגו. המשחק נעצר במקום הפגיעה.`;
+ $('impactScreen').hidden=false;$('impactNext').textContent=fatal?'לסיכום הכהונה ←':'חזרה לקרב';
+}
+$('impactNext').onclick=()=>{const incident=S.incident;if(!incident)return;$('impactScreen').hidden=true;S.incident=null;if(incident.fatal)showEnd();else{S.camTo={x:W/2,y:H/2,z:1};toast('חזקו את השמירה כדי למנוע פגיעה נוספת','warn');}};
+function checkNationalEnd(){const key=['world','money','unity'].find(k=>META[k]<=0);if(!key)return false;finishRun({world:'הבידוד המדיני הכריע את הממשלה',money:'הקופה התרוקנה',unity:'החברה התפצלה והממשלה נפלה'}[key]);return true;}
+function finishRun(reason,complete=false){
+ META.gameOver=true;stageSurface('runEndScreen','runEnd');
+ $('runEndTitle').textContent=complete?'הכהונה שלך, עד כאן':'הממשלה נפלה';$('runYears').textContent=(Math.floor(META.totalP/30)+META.israeliCiv)+' הרוגים ב־'+META.years.toFixed(1)+' שנים';$('runEndReason').textContent=reason;
+ const deaths=Math.floor(META.totalP/30)+META.israeliCiv;
+ $('runTotals').innerHTML=`<div><b>${Math.round(META.control)}%</b>אחיזה ממוצעת בשתי הגזרות</div><div><b>${deaths}</b>הרוגים ישראלים</div>`;
+ if(!META.recorded&&playMode==='campaign'){let rows=readScores();rows.push({id:Date.now(),years:META.years,area:META.control,deaths,complete});rows=rows.slice(-60);try{localStorage.setItem('gvoolt-leaderboard-v2',JSON.stringify(rows))}catch{}META.recorded=true;}
+ renderScores();saveMeta();
+}
+function readScores(){try{const x=JSON.parse(localStorage.getItem('gvoolt-leaderboard-v2')||'[]');return Array.isArray(x)?x.filter(r=>Number.isFinite(r.years)&&Number.isFinite(r.area)&&Number.isFinite(r.deaths)):[]}catch{return[]}}
+function renderScores(){
+ const rows=readScores().sort(leaderTab==='area'?((a,b)=>b.area-a.area||b.years-a.years):((a,b)=>b.years-a.years||a.deaths-b.deaths)).slice(0,6);
+ $('leaderArea').classList.toggle('active',leaderTab==='area');$('leaderSurvival').classList.toggle('active',leaderTab==='survival');
+ $('leaderContent').innerHTML=rows.length?`<table class="leader-table"><thead><tr><th>#</th><th>שטח</th><th>שנים</th><th>הרוגים ישראלים</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${Math.round(r.area)}%</td><td colspan="2">${r.deaths} הרוגים ב־${r.years.toFixed(1)} שנים</td></tr>`).join('')}</tbody></table>`:'<p>השיא הראשון יופיע בסיום משחק מלא.</p>';
+}
+$('leaderArea').onclick=()=>{leaderTab='area';renderScores()};$('leaderSurvival').onclick=()=>{leaderTab='survival';renderScores()};$('newRun').onclick=()=>launch(0,'campaign');$('runMenu').onclick=()=>showMenu();
+function useCluster(){
+ if(S.deployment||S.frozen)return;
+ if(!canAct()||!MODS.clusterUnlocked||stock('cluster')<1||S.cd.cluster>0)return;
+ spend('cluster');S.cd.cluster=S.cdMax.cluster=55*MODS.droneCdMul;S.used.cluster++;
+ for(const n of S.nodes.filter(n=>n.owner==='E'&&!n.hidden)){const hit=Math.min(20,n.troops);n.troops-=hit;S.enemyLost+=hit;n.flash=.8;S.fx.push({type:'blast',x:n.x,y:n.y,t:0,d:1.1,small:true});if(n.troops<=0){n.owner='N';n.pending=0;}}
+ S.aiOn=true;toast('פצצות מצרר: עד 20 יחידות בכל בסיס אויב','good');
+}
+BOOST.cluster={el:$('bCluster'),use:useCluster,cd:'cdCluster',lvl:0};$('bCluster').onclick=useCluster;
+function paintLocks(){
+ for(const k in BOOST){const b=BOOST[k],on=hasB(k);b.el.classList.toggle('locked',!on);b.el.hidden=k==='cluster'&&!MODS.clusterUnlocked;
+ const sub=b.el.querySelector('.sub');sub.textContent=on?({reserve:`${MODS.reserveN} לוחמים`,drone:`${MODS.droneCount} חוליות`,tech:'מזהה ומפציץ',cluster:'20 לכל בסיס'}[k]):`משלב ${b.lvl}`;
+ b.el.querySelector('.stock').textContent=stock(k);}
+ bar.classList.toggle('has-cluster',MODS.clusterUnlocked);
+}
+function paintBoosts(){
+ for(const k in BOOST){const b=BOOST[k],on=hasB(k),cd=S.cd[k]||0,c=b.el.querySelector('.cd');b.el.disabled=!on||!canAct()||stock(k)<1||cd>0;if(S.boostTutorial)b.el.disabled=k!=='reserve';b.el.classList.toggle('boost-tutorial',k==='reserve'&&!!S.boostTutorial);b.el.classList.toggle('ready',!b.el.disabled);b.el.classList.toggle('empty',stock(k)<1);b.el.classList.toggle('on',k==='tech'&&S.techT>0);b.el.querySelector('.stock').textContent=stock(k);
+ if(on&&cd>0){c.hidden=false;c.textContent=Math.ceil(cd);c.style.setProperty('--p',cd/(S.cdMax[k]||1)*100+'%')}else c.hidden=true;}
+ $('campaignStatus').textContent=`${LV.name} · ${META.years.toFixed(1)} שנות כהונה`;
+}
+
+const PORTFOLIOS=[
+ {id:'home',name:'מיגון העורף',icon:'🏠',req:4},
+ {id:'settle',name:'התיישבות',icon:'🌱',req:4},
+ {id:'equip',name:'ציוד לחימה',icon:'🎒',req:6},
+ {id:'reserve',name:'מילואים',icon:'👥',req:4},
+ {id:'iran',name:'התיק האיראני',icon:'🎯',req:5},
+ {id:'religion',name:'דת',icon:'📜',req:3},
+ {id:'pa',name:'הרשות הפלסטינית',icon:'🤝',req:3}
+];
+const budgetProgress=c=>c?Math.min(1,c.amt/(c.req*2.5)):0;
+const funding=c=>budgetProgress(c)<.4?'low':budgetProgress(c)<=.7?'medium':'high';
+function openBudget(){
+ if(LI===LEVELS.length-1){finishRun('השלמת את רצף המערכות',true);return;}
+ stageSurface('budgetScreen','budget');$('budgetGo').hidden=false;
+ const eligible=PORTFOLIOS.filter((c,i)=>i<4||META.unlocks[c.id]).map(c=>({...c,req:c.req+Math.floor(META.round/2),amt:0}));
+ const baseAid=META.world>=65?12:META.world>=35?8:0,aid=Math.max(0,baseAid-(META.aidPenalty||0));
+ const required=eligible.reduce((a,c)=>a+c.req,0),domestic=Math.max(8,14-2*Math.max(0,META.round-1)),total=domestic+aid,piles=[];let left=domestic,idx=0;
+ while(left>0){const amt=Math.min(left,4);piles.push({id:'p'+idx++,amt,source:'home'});left-=amt;}
+ left=aid;idx=0;while(left>0){const amt=Math.min(left,4);piles.push({id:'us'+idx++,amt,source:'usa'});left-=amt;}
+ BG={cats:eligible,piles,selected:null,locked:false,aid,required,total};
+ const previous=META.aidAmountLast??12,reduction=aid<previous;$('aidNotice').hidden=!reduction;
+ $('aidNotice').textContent=`סיוע מארה״ב: ${aid} מיליארד, במקום ${previous}.`;
+ META.aidAmountLast=aid;META.aidLast=aid;renderBudget();
+}
+function renderBudget(){
+ const positions=[[25,17],[74,33],[24,53],[72,74],[28,92],[74,111],[26,131]];
+ $('folders').style.setProperty('--map-height',BG.cats.length>4?'640px':'360px');
+ $('folders').innerHTML='<div class="budget-terrain" aria-hidden="true"></div>'+BG.cats.map((c,i)=>`<div class="folder ${funding(c)}" data-folder="${c.id}" style="left:${positions[i][0]}%;top:${positions[i][1]*3.8}px" role="button" tabindex="0" aria-label="${c.name}: ${c.amt} מיליארד, ${Math.round(budgetProgress(c)*100)} אחוז"><span class="folder-icon">${c.icon}</span><span class="budget-ring"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="ring-track" cx="40" cy="40" r="34"/><circle class="ring-progress" style="opacity:${c.amt?1:0}" cx="40" cy="40" r="34" pathLength="100" stroke-dasharray="${budgetProgress(c)*100} 100"/></svg><b class="budget-dot">${c.amt}</b></span><span class="folder-name">${c.name}</span></div>`).join('');
+ $('moneyPiles').innerHTML=BG.piles.map(p=>`<button class="money-pile ${p.source==='usa'?'usa':''} ${p.id===BG.selected?'selected':''}" data-pile="${p.id}" aria-label="${p.amt} מיליארד ${p.source==='usa'?'סיוע אמריקאי':''}"><span class="coins">${Array.from({length:p.amt},(_,i)=>`<i style="bottom:${i*4}px"></i>`).join('')}</span><b>${p.amt}</b>${p.source==='usa'?'<span class="us-flag" aria-label="סיוע מארצות הברית"><i></i></span>':''}</button>`).join('');
+ const rem=BG.piles.reduce((a,p)=>a+p.amt,0);$('moneyRemaining').textContent=rem?`${rem} מיליארד לחלוקה`:'התקציב חולק';$('budgetGo').disabled=rem>0||BG.locked;
+}
+function flyCoins(from,to,n){
+ if(!from||!to)return;const a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
+ for(let i=0;i<Math.min(n*2,12);i++){const el=document.createElement('i');el.className='flying-coin';el.textContent='₪';document.body.appendChild(el);const x=a.x+a.width/2,y=a.y+a.height/2,dx=b.x+b.width/2-x,dy=b.y+b.height/2-y;el.style.left=x+'px';el.style.top=y+'px';const anim=el.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:`translate(${dx*.5-15+(i%3)*10}px,${dy*.5-55}px) scale(1.15)`,offset:.5},{transform:`translate(${dx-10}px,${dy-10}px) scale(.55)`,opacity:0}],{duration:reduced?1:520,delay:reduced?0:i*35,easing:'ease-in-out'});anim.onfinish=()=>el.remove();}
+}
+function allocate(id,one=false){
+ if(!BG||BG.locked)return;const c=BG.cats.find(c=>c.id===id),p=BG.piles.find(p=>p.id===BG.selected)||BG.piles[0];if(!c||!p)return;
+ const n=one?1:p.amt;flyCoins(document.querySelector(`[data-pile="${p.id}"]`),document.querySelector(`[data-folder="${id}"]`),n);
+ c.amt+=n;p.amt-=n;if(!p.amt)BG.piles=BG.piles.filter(x=>x!==p);BG.selected=null;renderBudget();
+}
+function transferBudget(from,to){
+ if(!BG||BG.locked||from===to)return false;const a=BG.cats.find(c=>c.id===from),b=BG.cats.find(c=>c.id===to);if(!a||!b||a.amt<1)return false;
+ flyCoins(document.querySelector(`[data-folder="${from}"]`),document.querySelector(`[data-folder="${to}"]`),1);a.amt--;b.amt++;renderBudget();return true;
+}
+let moneyDrag=null,suppressBudgetClick=false;
+function clearMoneyArrow(){document.getElementById('moneyArrow')?.remove();document.querySelectorAll('.folder.target').forEach(el=>el.classList.remove('target'));}
+function drawMoneyArrow(m,x,y){
+ let svg=document.getElementById('moneyArrow');if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='moneyArrow';svg.innerHTML='<defs><marker id="moneyArrowHead" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0L7 3.5 0 7Z" fill="#fff2c9"/></marker></defs><path class="arrow-shadow"/><path class="arrow-line" marker-end="url(#moneyArrowHead)"/>';document.body.appendChild(svg);}
+ const box=(m.el.querySelector('.budget-ring')||m.el).getBoundingClientRect();const sx=box.x+box.width/2,sy=box.y+box.height/2;
+ const target=document.elementsFromPoint(x,y).map(el=>el.closest('[data-folder]')).find(el=>el&&(!m.folder||el.dataset.folder!==m.id));document.querySelectorAll('.folder.target').forEach(el=>el.classList.remove('target'));
+ if(target){target.classList.add('target');const b=target.querySelector('.budget-ring').getBoundingClientRect();x=b.x+b.width/2;y=b.y+b.height/2;}
+ const dx=x-sx,dy=y-sy,len=Math.hypot(dx,dy)||1,offset=Math.min(box.width/2+4,len/3);const d=`M${sx+dx/len*offset} ${sy+dy/len*offset} L${x-dx/len*offset} ${y-dy/len*offset}`;svg.querySelectorAll(':scope > path').forEach(el=>el.setAttribute('d',d));
+}
+function moneyDown(e){const el=e.target.closest('[data-pile],[data-folder]');if(!el||!BG||BG.locked)return;moneyDrag={id:el.dataset.pile||el.dataset.folder,folder:!!el.dataset.folder,x:e.clientX,y:e.clientY,el,moved:false};if(!moneyDrag.folder)BG.selected=moneyDrag.id;el.setPointerCapture(e.pointerId);}
+function moneyMove(e){if(!moneyDrag)return;const m=moneyDrag;if(Math.hypot(e.clientX-m.x,e.clientY-m.y)>8)m.moved=true;if(m.moved)drawMoneyArrow(m,e.clientX,e.clientY);}
+function moneyUp(e){if(!moneyDrag)return;const m=moneyDrag;moneyDrag=null;m.el.style.transform='';m.el.style.zIndex='';const target=document.elementsFromPoint(e.clientX,e.clientY).map(el=>el.closest('[data-folder]')).find(el=>el&&(!m.folder||el.dataset.folder!==m.id));
+ clearMoneyArrow();if(m.moved){suppressBudgetClick=true;setTimeout(()=>suppressBudgetClick=false,0);if(target){if(m.folder)transferBudget(m.id,target.dataset.folder);else allocate(target.dataset.folder);}else renderBudget();}else if(!m.folder)renderBudget();
+}
+for(const id of ['moneyPiles','folders']){const el=$(id);el.onpointerdown=moneyDown;el.onpointermove=moneyMove;el.onpointerup=moneyUp;el.onpointercancel=()=>{moneyDrag=null;clearMoneyArrow();renderBudget();};}
+let selectedFolder=null;
+$('folders').onclick=e=>{if(suppressBudgetClick)return;const f=e.target.closest('[data-folder]');if(!f)return;if(BG.piles.length)allocate(f.dataset.folder);else if(selectedFolder){transferBudget(selectedFolder,f.dataset.folder);selectedFolder=null;}else{selectedFolder=f.dataset.folder;f.classList.add('selected');}};
+$('folders').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click();}};
+
+function applyBudget(){
+ if(!BG||BG.locked||BG.piles.length)return false;BG.locked=true;
+ const amt=id=>BG.cats.find(c=>c.id===id)?.amt||0,grade=id=>funding(BG.cats.find(c=>c.id===id));
+ META.activePolicyBase=null;
+ const previous=MODS,m={...DEF_MODS},e=grade('equip'),se=grade('settle'),r=grade('reserve');
+ if(e==='low'){m.growMul=.8;m.speedMul=.85;m.droneCount=100;m.droneCdMul=1.35;m.droneTimeMul=.8;m.techCdMul=1.35;m.techTimeMul=.8;}
+ if(e==='high'){m.growMul=1.2;m.speedMul=1.18;m.droneCount=100;m.droneCdMul=.75;m.droneTimeMul=1.3;m.techCdMul=.75;m.techTimeMul=1.4;}
+ m.clusterUnlocked=previous.clusterUnlocked||amt('equip')>=20;
+ if(amt('equip')>=20)META.stock.cluster+=2;
+ const charge=grade=>grade==='high'?3:grade==='medium'?1:0;
+ META.stock.reserve+=charge(r);META.stock.drone+=charge(e);META.stock.tech+=charge(e);
+ m.reserveN=75;m.reserveCdMul=r==='high'?.8:r==='low'?1.25:1;
+ m.settlementFunding=se;m.extraSettlements=se==='high'?2:se==='medium'?1:0;m.extraRanches=se==='low'?2:0;m.civil=amt('settle')===0&&!!META.arcs.civilAuthorized;
+ META.settleUnder=se==='low'?META.settleUnder+1:0;
+ m.homeProtection=amt('home')>=12?.95:grade('home')==='high'?.8:grade('home')==='medium'?.6:.25;m.crossAt=.5;
+ m.northSafe=true;
+ if(META.unlocks.iran){m.iranPressure=amt('iran')===0?1.8:amt('iran')<5?1.3:amt('iran')<8?1:.65;if(amt('iran')>=12)META.iranAfter++;}
+ if(META.unlocks.religion&&amt('religion')>=3)META.unity=clamp(META.unity+3,0,100);
+ if(META.unlocks.pa&&amt('pa')>=3)META.world=clamp(META.world+4,0,100);
+ META.budgetNeeds=Object.fromEntries(BG.cats.map(c=>[c.id,c.req]));META.lastBudget=Object.fromEntries(BG.cats.map(c=>[c.id,c.amt]));MODS=m;saveMeta();return true;
+}
+$('budgetGo').onclick=()=>{if(applyBudget())openCards();};
+// Canvas keeps the map underneath the budget; interaction belongs to the folders.
+function updateBudget(){}function budgetDown(){}function budgetUp(){}
+function flatLogical(e){const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width*W,y:(e.clientY-b.top)/b.height*H}}
+function drawBudget(){draw();}
+
+const DIALOGUE={"minister":[{"id":"settle-first-low","when":"first-low-settlement-budget","text":"יכול להיות שראיתי שאתה לא מתקצב התיישבות? אתה מבין שאנחנו ניתן גז על החוות ככה כן?"},{"id":"settle-vest","when":"low-settlement-budget-after-warning","text":"תבין. ההתיישבות היא השכפ\"ץ של מדינת ישראל. לכן אנחנו חייבים לשלוח לשם מלא חיילים לאבטחה. תעביר עוד כסף בבקשה, מיד."},{"id":"settle-vest-followup","when":"low-settlement-budget-after-vest","text":"אמנם שירתתי פחות משנה וחצי בצבא, אבל אני יודע איך נראה שכפ\"ץ עם חורים. עוד כסף להתיישבות. עכשיו."},{"id":"gaza-offices","text":"מה דעתך על הרעיון - להעביר את משרדי הממשלה לעזה? סתם חומר למחשבה."},{"id":"king-dream","text":"חלמתי אתמול על דוד המלך. הוא אמר לי שהוא מאוכזב שלא כל ארץ ישראל שלנו."},{"id":"settle-high","when":"high-settlement-budget","text":"תדע לך, לא חשבתי שתתן כל כך הרבה כסף להתיישבות. אתה תראה - ככל שנצליח להרוג את כולם, ככה נוכל לחיות בביטחון במזרח התיכון.","yes":"מסכים לגמרי","no":"אני…לא בטוח שאתה צודק"}],"bengvir":[{"id":"bombing","text":"רעיון. אם נפציץ אותם לחתיכות, זה יעודד את מי שנשאר להגר מרצון. מה אומר?"},{"id":"civil-warning","when":"before-first-civilian-squad","text":"יש לנו בעיה. אתה מייבש את ההתיישבות. חבל. חבל שאולי יום אחד איזה יהודי מג'נון ירצה להתפוצץ על ערבים ככה סתם. עדיף נעשה את זה מסודר","yes":"טוב טוב קח כסף להתיישבות","no":"יהודי מג'נון? ספר לי עוד!"},{"id":"crocodiles","text":"תנינים.","yes":"כן, הגיוני סה\"כ","no":"מה נסגר איתך??"},{"id":"graves-budget","when":"low-settlement-budget","text":"תגיד יצא לך פעם לעשות דייט בקברי צדיקים? מה זה התקציב הדרדלה הזה? ככה אנחנו לא מראים, לא עוצמה, ולא יהודית. תקציבים והתנצלות בתקשורת בבקשה."},{"id":"arm-wrestling","text":"תגיד אם אנחנו עושים הורדות ידיים ביד ימין. מי לדעתך מנצח?"},{"id":"army-dream","text":"אתה יודע שתמיד היה לי חלום להתגייס לצה\"ל ולרסס ערבים? לא רצו לתת לי!","yes":"היום היו מקבלים אותך","no":"אפשר להבין למה"}],"wife":[{"id":"reserve-days","text":"בעלי טחן 500 ימי מילואים בשנה אחת. בבקשה, גייס קצת פחות מילואים","yesEffect":"remove-one-reserve-stock"},{"id":"care-packages","text":"מה דעתך על משלוחים ענקיים לחיילים האהובים שלנו, תחתונים וגופיות?","yes":"בטח! במימון ציבורי!","no":"תפתחי הדסטארט"},{"id":"nightmares","text":"בעלי מתעורר כל לילה בצעקות איומות. יש לך מושג למה?","yes":"יש מצב. אנחנו נטפל בזה","no":"וואלה האמת שלא!"},{"id":"war-exhaustion","text":"המלחמה הזאת גומרת אותנו.","yes":"מלחמת אין ברירה","no":"את עוד תתגעגעי לתקופה"},{"id":"war-end","text":"תגיד, יש צפי לסיום של המלחמה הזאת?","yes":"בעזרת השם ישראל תהיה שלמה, ואז גאולה. פסע משם.","no":"מי שואל?"},{"id":"coalition-service","text":"אומרים שרוב הקואליציה שלך בכלל לא היו בצבא. אני חוששת ההחלטות שהם מקבלים לא נכונות","yes":"הם צודקים.","no":"מה הקשר בירה נשר"},{"id":"memorial","text":"אני והחברות רוצות לעשות טקס אזכרה יפה לכל חללי המלחמה. זה לא זול."},{"id":"inquiry-start","text":"אני שומעת קצת דיבורים על כך שאנשים רוצים לחקור מה קרה ב7.10. אתה פתוח לזה?","yes":"מה, לא עשינו את זה עד עכשיו?","no":"בטח! אני הראשון למנות את החוקרים!"},{"id":"inquiry-warnings","text":"אה, ועדת החקירה מספרת שהיו המון התראות התעלמת מהן?","yes":"שימשיכו לחקור","no":"אוקי מספיק עם הועדה המטופשת הזאת"},{"id":"inquiry-money","text":"ועדת החקירה מספרת שלא הבנתי למה הם יורים ב6:29, כי העברת מלא כסף לחמאס?","yes":"שימשיכו לחקור","no":"אוקי מספיק עם הועדה המטופשת הזאת"},{"id":"inquiry-strength","text":"ועדת החקירה מצאה כי המליונים שעברו לחמאס אכן מאוד דירבנו אותם להתחזק","yes":"שימשיכו לחקור","no":"אוקי מספיק עם הועדה המטופשת הזאת"},{"id":"inquiry-responsibility","text":"ועדת החקירה קובעת כי ראש הממשלה אחראי להצלחות המדינה, וגם לכשלונות המדינה. ה7.10 זה כישלון. אתה אחראי לו.","yes":"בסדר! אני אחראי. אבל לא אשם.","no":"בסדר! אני אחראי. אבל לא אשם."}],"general":[{"id":"army-speed","when":"low-equipment-budget","text":"איך אני אמור להגן על הגזרות בלי כסף? החיילים יהיו הרבה פחות מהירים עכשיו"},{"id":"army-growth","when":"low-equipment-budget","text":"חביבי, בלי תקציב ראוי, תחלופת החיילים איטית יותר!"},{"id":"army-drones","when":"low-equipment-budget","text":"מלחמה זה דבר יקר. אתה מאלץ אותי לחתוך בכמות הדרונים!!"},{"id":"army-high","when":"high-equipment-budget","text":"פששש האמת פינקת! בקצב הזה נוכל להמציא בעצמנו כלי נשק."},{"id":"army-medium","when":"medium-equipment-budget","text":"תקציב נאה. נוכל לפנק את החיילים עכשיו עם אחלה ציוד.","yes":"קח עוד קצת שיהיה לך לפנסיה תקציבית","no":"הכל טוב העיקר תפרקו אותם"}],"treasury":[{"id":"treasury-bases","text":"המלחמה הזאת יקרה טילים. אנחנו פתוחים ב־7 גזרות. צריך לבחור מאיפה לגרד את הכסף. גם לשמור את הבסיסים מלאים עולה כסף.","yes":"סבבה נעלה מיסים","no":"אין עוד כסף","penalty":["baseStart",0.8]},{"id":"treasury-food","text":"הטילים כבר שולמו. עכשיו גם החיילים רוצים לאכול. חוצפה, אני יודע. מאיפה מביאים עוד כסף?","yes":"סבבה ניקח מהחינוך","no":"אין עוד כסף","penalty":["speedCap",0.75]},{"id":"treasury-replacements","text":"שבע גזרות, קופה אחת. ביקשתי מהאקסל למצוא עוד כסף, הוא ביקש חופשת מחלה. צריך לממן את תחלופת הכוחות.","yes":"סבבה ניקח מהפוסט־טראומטיים","no":"אין עוד כסף","penalty":["growthCap",0.7]},{"id":"treasury-drones","text":"הרחפנים לא עובדים על אהבת הארץ. הספק רוצה כסף, ולא מקבל הבטחות לניצחון מוחלט. פותחים עוד מקור תקציבי?","yes":"סבבה נעלה מיסים","no":"אין עוד כסף","penalty":["droneCut",1]},{"id":"treasury-reserves","text":"המילואימניקים מוכנים להגיע. האוטובוסים פחות. הדלק, ההסעות, הציוד — מישהו יצטרך לשלם על הסבב הבא.","yes":"סבבה ניקח מהחינוך","no":"אין עוד כסף","penalty":["reserveDelay",1.4]},{"id":"treasury-radar","text":"אמרו לי לחתוך בשומנים. מצאתי רק כבלים של הרדאר. לפני שאני מוציא את התקע, יש מאיפה לגרד עוד כסף?","yes":"סבבה ניקח מהפוסט־טראומטיים","no":"אין עוד כסף","penalty":["radarCut",0.75]}],"defense":[{"id":"defense-transport","text":"יש לי תוכנית להזיז את הכוחות מהר יותר. היא כוללת רכבים שעובדים ודלק בתוכם. מהפכני, אני יודע. מאשרים?","yes":"תממן את ההובלה","no":"נסתדר עם הקיים","benefit":["speedBonus",0.1]},{"id":"defense-drones","text":"אני רוצה עוד רחפן בכל גיחה. הגנרל רוצה עשרה. אמרתי לו שנתחיל באחד ונצטלם כאילו קנינו עשרה.","yes":"מאשר עוד רחפן","no":"בלי רכש נוסף","benefit":["droneBonus",1]},{"id":"defense-radar","text":"החוליות נעלמות לנו בין הגבעות. אפשר להאריך את זמן הרדאר, אבל הפעם צריך לשלם לטכנאים ולא רק להודות להם.","yes":"שלם לטכנאים","no":"הרדאר הקיים יספיק","benefit":["radarBonus",0.25]}],"foreign":[{"id":"foreign-warning","text":"תשמע יש בעיות עם נשיא ארה״ב החדש. מסתמן שהוא אנטישמי שלא אוהב שאנחנו מפנים ערבים מהבתים שלהם. הם מקצצים בתקציב הביטחון. שלנו.","yes":"שילך להתקוועד","no":"תגיד לו שנשתדל להרוג ברכות"},{"id":"foreign-gentle","text":"שומע, לא עבד הקטע של ״להרוג ברכות״. הם מקצצים עוד בתקציב.","yes":"סופר ספרטה. נילחם בציפורניים","no":"תגיד לו שנקים ועדה"},{"id":"foreign-defiant","text":"מסרתי את התשובה שלך. הם מסרו שההעברה הבאה תהיה קטנה עוד יותר. דיפלומטיה, מה אני אגיד לך.","yes":"סופר ספרטה. נילחם בציפורניים","no":"תגיד לו שנקים ועדה"},{"id":"foreign-committee","text":"הם שאלו מה הוועדה החליטה. אמרתי שעוד בוחרים כיסאות. בינתיים עוד חלק מהסיוע נעלם.","yes":"נסתדר בלי הטובות שלהם","no":"תנסה לפתוח מחדש את השיחה"},{"id":"foreign-sparta","text":"בדקתי. לספרטה לא היו סוללות לרחפנים. הסיוע האמריקאי כמעט נגמר, והספקים עדיין רוצים דולרים.","yes":"נמשיך לבד","no":"תנסה לפתוח מחדש את השיחה"}]};
+// Card decisions affect one battle. Preserve the pre-decision policy for retries and expiry.
+function queueBattleEffect(key,value){(META.nextBattle||={})[key]=value;}
+function prepareBattleEffects(){
+ if(META.activePolicyBase)Object.assign(MODS,META.activePolicyBase);
+ const p=META.nextBattle||{};META.nextBattle={};META.activePolicyBase={};
+ const set=(k,v)=>{if(!(k in META.activePolicyBase))META.activePolicyBase[k]=MODS[k];MODS[k]=v;};
+ if(p.growthBonus)set('growMul',MODS.growMul+p.growthBonus);
+ if(p.speedBonus)set('speedMul',MODS.speedMul+p.speedBonus);
+ if(p.droneBonus)set('droneCount',MODS.droneCount+p.droneBonus);
+ if(p.radarBonus)set('techTimeMul',MODS.techTimeMul*(1+p.radarBonus));
+ if(p.speedCap)set('speedMul',Math.min(MODS.speedMul,p.speedCap));
+ if(p.growthCap)set('growMul',Math.min(MODS.growMul,p.growthCap));
+ if(p.droneCut)set('droneCount',Math.max(1,MODS.droneCount-p.droneCut));
+ if(p.reserveDelay)set('reserveCdMul',MODS.reserveCdMul*p.reserveDelay);
+ if(p.radarCut)set('techTimeMul',MODS.techTimeMul*p.radarCut);
+ // Applied after deployment's safety top-up so the penalty cannot be silently undone.
+ set('baseStart',p.baseStart||1);
+}
+function describeBattleEffect(k,v){return {baseStart:'בשלב הבא: 80% מכוח הפתיחה',speedCap:'בשלב הבא: 75% מהירות',growthCap:'−תחלופה',droneCut:'−רחפן להפעלה',reserveDelay:'+זמן המתנה למילואים',radarCut:'−משך רדאר',speedBonus:'+מהירות',growthBonus:'+תחלופה',droneBonus:'+רחפן להפעלה',radarBonus:'+משך רדאר'}[k];}
+function consequenceSnapshot(){return {mods:{...MODS},stock:{...META.stock},next:{...META.nextBattle}};}
+function showConsequences(before,card){
+ const lines=[];for(const [k,v]of Object.entries(META.nextBattle||{}))if(before.next[k]!==v)lines.push(describeBattleEffect(k,v));
+ if(card.actor==='general'&&card.id!=='army-medium')lines.push({'army-speed':'−מהירות','army-growth':'−תחלופה','army-drones':'−משך תקיפת רחפנים','army-high':'+מהירות · +תחלופה'}[card.id]);
+ if(lines.filter(Boolean).length)cardFeedback([...new Set(lines.filter(Boolean))].join(' · '));
+}
+
+// Authored dialogue lives in character-dialogue.json; this file handles eligibility and consequences.
+const INQUIRY_KEY='gvoolt-inquiry-v1';
+function inquiryState(){
+ if(META.arcs.inquiry)return META.arcs.inquiry;
+ let x={stage:0,blocks:0,closed:false};
+ if(playMode!=='single')try{const saved=JSON.parse(localStorage.getItem(INQUIRY_KEY));if(saved&&Number.isInteger(saved.stage)&&saved.stage>=0&&saved.stage<=5)x={stage:saved.stage,blocks:Math.min(2,Math.max(0,saved.blocks||0)),closed:!!saved.closed};}catch{}
+ return META.arcs.inquiry=x;
+}
+function persistInquiry(){if(playMode!=='single')try{localStorage.setItem(INQUIRY_KEY,JSON.stringify(inquiryState()));}catch{}}
+function inquiryAnswer(id,yes){
+ const q=inquiryState();
+ if(id==='inquiry-start'){if(yes)q.stage=1;}
+ else if(id==='inquiry-responsibility'){q.stage=5;q.closed=true;}
+ else if(yes)q.stage++;
+ else{q.blocks++;if(q.blocks>=2)q.closed=true;}
+ META.arcs.inquiryAfter=META.round+1;persistInquiry();
+}
+function budgetGrade(id){
+ const req=META.budgetNeeds?.[id]||(PORTFOLIOS.find(c=>c.id===id)?.req||4)+Math.floor(META.round/2);
+ return funding({amt:META.lastBudget?.[id]||0,req});
+}
+function refreshEquipmentPolicy(){
+ const e=budgetGrade('equip');
+ for(const k of ['growMul','speedMul','droneCount','droneCdMul','droneTimeMul','techCdMul','techTimeMul'])MODS[k]=DEF_MODS[k];
+ if(e==='low')Object.assign(MODS,{growMul:.8,speedMul:.85,droneCount:100,droneCdMul:1.35,droneTimeMul:.8,techCdMul:1.35,techTimeMul:.8});
+ if(e==='high')Object.assign(MODS,{growMul:1.2,speedMul:1.18,droneCount:100,droneCdMul:.75,droneTimeMul:1.3,techCdMul:.75,techTimeMul:1.4});
+}
+function cardFeedback(text){const el=$('cardFeedback');el.textContent+=(el.hidden?'':'\n')+text;el.hidden=false;if(CQ)CQ.feedback=true;}
+function fundSettlement(preventCivil=false){
+ if(preventCivil){META.arcs.civilAuthorized=false;META.arcs.bonusSettlementRound=META.round;MODS.civil=false;MODS.extraSettlements=(MODS.settlementFunding==='high'?2:MODS.settlementFunding==='medium'?1:0)+1;cardFeedback('−כסף · +יישוב · החוליות נמנעו');}
+ else cardFeedback('−כסף');return true;
+}
+function dialogueCard(id){
+ const actor=Object.keys(DIALOGUE).find(a=>DIALOGUE[a].some(c=>c.id===id)),d=DIALOGUE[actor].find(c=>c.id===id);
+ let y=d.yes||'בסדר, שמעתי',n=d.no||'נעבוד עם מה שיש',dy=[0,0,0],dn=[0,0,0],ay=()=>{},an=()=>{};
+ if(['settle-first-low','settle-vest','settle-vest-followup','graves-budget','civil-warning'].includes(id)){
+  const canPay=META.money>0;
+  y=d.yes||'נוסיף כסף להתיישבות';n=d.no||'זה התקציב. תסתדרו';dy=canPay?[-2,-3,1]:[0,0,0];dn=[1,0,-2];ay=()=>fundSettlement(id==='civil-warning');
+  if(!canPay)y='הקופה ריקה';
+  if(id==='civil-warning'){an=()=>{META.arcs.civilAuthorized=true;MODS.civil=true;cardFeedback('+חוליות אזרחיות בשלב הבא');};}
+ }
+ const effects={
+  'gaza-offices':[-3,-1,0,1,0,0], 'king-dream':[-2,0,0,1,0,0], 'settle-high':[-6,0,-2,2,0,1],
+  'bombing':[-6,-2,-2,2,0,1], 'army-dream':[-3,0,-1,1,0,0],
+  'reserve-days':[0,0,4,0,0,-3], 'care-packages':[0,-4,4,0,0,-2],
+  'nightmares':[1,-3,4,0,0,-4], 'war-exhaustion':[0,0,-1,0,0,-3],
+  'war-end':[-2,0,-2,0,0,-3], 'coalition-service':[0,0,-2,0,0,-3],
+  'memorial':[0,-4,4,0,0,-3]
+ };
+ const labels={
+  'gaza-offices':['נחשוב על זה','המשרדים נשארים כאן'], 'king-dream':['מסרתי ד״ש','גם לחלומות יש תקציב'],
+  'bombing':['אני שומע אותך','לא, זה לא הכיוון'], 'arm-wrestling':['ברור שאתה','אני. בלי שאלה'],
+  'reserve-days':['נוריד יחידת מילואים אחת','צריך אותו בחזית'], 'memorial':['נממן את הטקס','הקופה לא מאפשרת עכשיו'],
+  'army-speed':['הבנתי את המחיר','תעשה מה שאפשר'], 'army-growth':['נצטרך להסתדר עם פחות','זה מה שיש כרגע'],
+  'army-drones':['הבנתי, פחות רחפנים','תשמור אותם לרגע הנכון'], 'army-high':['תדאג שזה יגיע לחיילים','תשמור גם להמשך'],
+  'army-medium':['לפחות זה בכיוון','בלי חריגות, בבקשה']
+ };
+ if(labels[id]){y=d.yes||labels[id][0];n=d.no||labels[id][1];}
+ if(effects[id]){dy=effects[id].slice(0,3);dn=effects[id].slice(3);}
+ if(id==='reserve-days')ay=()=>{const had=stock('reserve');META.stock.reserve=Math.max(0,had-1);cardFeedback(had?'−הפעלת מילואים':'המילואים כבר אזלו');};
+ if(id.startsWith('inquiry-')){dy=[1,0,3];dn=id==='inquiry-start'?[0,0,0]:[-1,0,-3];if(id==='inquiry-responsibility')dn=[...dy];ay=()=>inquiryAnswer(id,true);an=()=>inquiryAnswer(id,false);}
+ if(actor==='treasury'){
+  dy=[0,8,-8];dn=[0,0,0];ay=()=>cardFeedback('+כסף · −לכידות');an=()=>queueBattleEffect(...d.penalty);
+ }
+ if(actor==='defense'){
+  dy=[0,-5,1];dn=[0,0,0];ay=()=>queueBattleEffect(...d.benefit);an=()=>cardFeedback('ללא שינוי בכוחות');
+ }
+ if(id==='army-medium'){dy=[0,-4,1];dn=[0,0,0];ay=an=()=>{queueBattleEffect('speedBonus',.1);queueBattleEffect('growthBonus',.1);};}
+ if(actor==='foreign'){
+  dy=[-4,0,-1];dn=[1,0,1];
+  const answer=gentle=>{const next=id==='foreign-warning'?1:['foreign-gentle','foreign-defiant'].includes(id)?2:3;META.arcs.foreignStage=next;META.arcs.foreignGentle=gentle;META.aidPenalty=[0,6,10,12][next];cardFeedback(next===1?'−סיוע מארה״ב: 6 מיליארד':next===2?'−סיוע מארה״ב: עוד 4 מיליארד':'−יתרת הסיוע מארה״ב');};
+  ay=()=>answer(false);an=()=>answer(true);
+ }
+ return {...makeCard(actor,d.text,option(y,...dy,ay),option(n,...dn,an)),id};
+}
+function getCardPool(){
+ const seen=META.arcs.cardSeen||{},low=budgetGrade('settle')==='low',eq=budgetGrade('equip'),q=inquiryState();
+ const cards=[];const add=(id,priority=0)=>cards.push({...dialogueCard(id),priority});
+ if(low&&!seen['settle-first-low'])add('settle-first-low',100);
+ else if(low&&!seen['settle-vest'])add('settle-vest',60);
+ else if(low&&!seen['settle-vest-followup'])add('settle-vest-followup',60);
+ if(budgetGrade('settle')==='high')add('settle-high',seen['settle-high']?0:40);
+ add('gaza-offices');add('king-dream');
+ const civilNeeded=(META.lastBudget?.settle??1)===0&&!META.arcs.civilAuthorized&&META.arcs.bonusSettlementRound!==META.round;
+ if(civilNeeded)add('civil-warning',99);
+ for(const id of ['bombing','crocodiles','arm-wrestling','army-dream'])add(id);
+ if(low)add('graves-budget');
+ for(const d of DIALOGUE.wife.filter(d=>!d.id.startsWith('inquiry-')))add(d.id);
+ if(!q.closed&&q.stage<5&&(META.arcs.inquiryAfter??0)<=META.round){
+  if(q.stage===0&&!seen['inquiry-start'])add('inquiry-start',META.round>=2?55:0);
+  else if(q.stage>0)add(['','inquiry-warnings','inquiry-money','inquiry-strength','inquiry-responsibility'][q.stage],70);
+ }
+ if(eq==='low')for(const id of ['army-speed','army-growth','army-drones'])add(id);
+ else add(eq==='high'?'army-high':'army-medium');
+ for(const d of [...DIALOGUE.treasury,...DIALOGUE.defense])add(d.id);
+ const stage=META.arcs.foreignStage||0;
+ if(stage<3&&META.round>=2&&(META.control>60||META.totalCiv>0||MODS.extraSettlements>0||stage>0))add(stage===0?'foreign-warning':stage===1?(META.arcs.foreignGentle?'foreign-gentle':'foreign-defiant'):(META.arcs.foreignGentle?'foreign-committee':'foreign-sparta'),85);
+ return cards;
+}
+function selectDialogue(){
+ const seen=META.arcs.cardSeen||{},visits=META.arcs.actorVisits||{},rng=mkRng(META.seed+META.round*137);
+ const ranked=getCardPool().map(c=>({...c,tie:rng()})).sort((a,b)=>b.priority-a.priority||(seen[a.id]||0)-(seen[b.id]||0)||a.tie-b.tie);
+ const candidates=Object.keys(DIALOGUE).map(actor=>ranked.find(c=>c.actor===actor)).filter(Boolean);
+ candidates.sort((a,b)=>b.priority-a.priority||(visits[a.actor]||0)-(visits[b.actor]||0)||a.tie-b.tie);
+ return candidates.slice(0,3);
+}
+
+const ACTORS={
+ treasury:{role:'שר האוצר',name:'שר האוצר · דמות בדיונית'},
+ defense:{role:'שר הביטחון',name:'שר הביטחון · דמות בדיונית'},
+ bengvir:{role:'השר לביטחון לאומי',name:'איתמר בן גביר · דמות משחק'},
+ minister:{role:'נציג ההתיישבות',name:'בצלאל סמוטריץ׳ · דמות משחק',bg:'#c3a376',shirt:'#354d59',hair:'#72533d',beard:true},
+ wife:{role:'אשת המילואימניק',name:'מיכל · נציגת המשפחות',bg:'#a6b5a1',shirt:'#c07550',hair:'#573d2e',long:true},
+ general:{role:'הגנרל',name:'ראש המטה',bg:'#a2aa79',shirt:'#566441',hair:'#898478',uniform:true},
+ foreign:{role:'שר החוץ',name:'משלחת הממשלה',bg:'#94b0b7',shirt:'#354550',hair:'#534b40',glasses:true},
+ rabbi:{role:'נציג המפלגה החרדית',name:'הרב מנחם',bg:'#baab85',shirt:'#363936',hair:'#575048',beard:true,hat:true},
+ abbas:{role:'אבו מאזן',name:'נציג הרשות הפלסטינית · דמות משחק',bg:'#a4b1aa',shirt:'#485664',hair:'#d7d2c5',glasses:true}
+};
+function portrait(a){
+ const id=Object.keys(ACTORS).find(k=>ACTORS[k]===a);
+ return `<img src="assets/${id}-warm.png" alt="דיוקן מאויר" draggable="false">`;
+}
+function makeCard(actor,text,yes,no){return {actor,text,yes,no};}
+function cardImpact(n){return !n?0:Math.sign(n)*(Math.abs(n)<=2?5:Math.abs(n)<=4?10:Math.abs(n)<=6?15:20);}
+function option(label,world,money,unity,apply=()=>{}){return {label,delta:{world:cardImpact(world),money:cardImpact(money),unity:cardImpact(unity)},apply};}
+function openCards(){
+ stageSurface('cardScreen','cards');CQ={list:selectDialogue(),i:0,busy:true};renderCard(true);
+}
+function meterIcon(k){
+ const shapes={world:'<circle cx="24" cy="24" r="17" fill="none" stroke-width="4"/><ellipse cx="24" cy="24" rx="8" ry="17" fill="none" stroke-width="3"/><path d="M8 18h32M8 30h32" fill="none" stroke-width="3"/>',money:'<path d="M10 17v19c0 9 28 9 28 0V17Z"/><ellipse cx="24" cy="17" rx="14" ry="6" fill="none" stroke-width="3"/><path d="M10 25c0 8 28 8 28 0M10 32c0 8 28 8 28 0" fill="none" stroke="black" stroke-width="2.5"/>',unity:'<path d="M23 3l-8 7-2 10-6 8 7 8 6 9 1-15-4-9 6-8Z M27 4l7 10-3 9 5 6-10 16-2-17-3-8 6-8Z"/>'};
+ return '<svg viewBox="0 0 48 48"><defs><mask id="meter-'+k+'"><g fill="white" stroke="white">'+shapes[k]+'</g></mask></defs><g mask="url(#meter-'+k+')"><rect width="48" height="48" fill="#66694e"/><rect class="icon-fill" width="48" height="48" style="transform:translateY('+48*(1-META[k]/100)+'px)" fill="'+(META[k]<25?'#d17c58':'#ede3b6')+'"/></g></svg>';
+}
+function renderMeters(delta=null,commit=false){
+ const root=$('nationMeters');
+ if(!root.children.length)root.innerHTML=['world','money','unity'].map(k=>'<div class="nation-stat" data-stat="'+k+'" data-value="'+META[k]+'" role="meter" aria-label="'+({world:'תמיכה בעולם',money:'כסף',unity:'לכידות'}[k])+'" aria-valuemin="0" aria-valuemax="100"><span class="effect-dot"></span>'+meterIcon(k)+'<b class="meter-change" aria-hidden="true"></b></div>').join('');
+ for(const k of ['world','money','unity']){
+  const el=root.querySelector('[data-stat="'+k+'"]'),value=META[k],old=Number(el.dataset.value),d=commit?value-old:delta?.[k]||0,fill=el.querySelector('.icon-fill');
+  el.setAttribute('aria-valuenow',value);el.classList.toggle('meter-preview',!!d&&!commit);el.classList.toggle('meter-down',d<0);el.querySelector('.effect-dot').style.opacity=d&&!commit?1:0;
+  if(commit&&d){
+   fill.getAnimations().forEach(a=>a.cancel());const from=48*(1-old/100),to=48*(1-value/100);
+   fill.style.transform='translateY('+to+'px)';
+   fill.animate([{transform:'translateY('+from+'px)'},{transform:'translateY('+to+'px)'}],{duration:1500,easing:'cubic-bezier(.25,.1,.25,1)'});
+   const change=el.querySelector('.meter-change');change.textContent=(d>0?'↑ +':'↓ ')+d;change.style.color=d>0?'#c4ed83':'#ff9a7e';
+   change.getAnimations().forEach(a=>a.cancel());change.animate([{opacity:0,transform:'translateY('+(d>0?14:-14)+'px)'},{opacity:1,transform:'translateY(0)',offset:.22},{opacity:1,transform:'translateY(0)',offset:.8},{opacity:0,transform:'translateY('+(d>0?-14:14)+'px)'}],{duration:1750});
+   el.animate([{filter:'brightness(1)'},{filter:'brightness(1.8)',offset:.4},{filter:'brightness(1)'}],{duration:1500});
+  }else if(!delta)fill.style.transform='translateY('+48*(1-value/100)+'px)';
+  el.dataset.value=value;fill.setAttribute('fill',value<25?'#db866b':'#f4df9d');
+ }
+}
+function renderRequestProgress(){const n=CQ.list.length,done=CQ.i;$('requestProgress').style.setProperty('--done',Math.min(100,done/(n-1)*100)+'%');$('requestProgress').setAttribute('aria-label',(n-done)+' בקשות נותרו');$('requestProgress').innerHTML=CQ.list.map((_,i)=>'<i class="'+(i<done?'done':i===done?'current':'')+'"></i>').join('');}
+function renderCard(deal=false){
+ let selected=CQ.list[CQ.i];
+ if(selected.actor==='general'){
+  const e=budgetGrade('equip');if(e==='high')selected=dialogueCard('army-high');else if(e==='medium')selected=dialogueCard('army-medium');else if(!['army-speed','army-growth','army-drones'].includes(selected.id))selected=dialogueCard('army-speed');
+ }
+ const c=CQ.list[CQ.i]=dialogueCard(selected.id),a=ACTORS[c.actor];$('cardFeedback').hidden=true;$('cardFeedback').textContent='';CQ.feedback=false;renderMeters();renderRequestProgress();$('cText').textContent=c.text;$('cAva').innerHTML=portrait(a);
+ const card=$('dcard');card.style.transform='';card.style.opacity=1;$('swipeStamp').style.opacity=0;
+ card.classList.toggle('dealing',deal);CQ.busy=deal;
+ if(deal)waitUI(()=>{card.classList.remove('dealing');CQ.busy=false;},350);
+}
+let cardDrag=null;
+$('dcard').onpointerdown=e=>{if(!CQ||CQ.busy)return;cardDrag={x:e.clientX,id:e.pointerId};$('dcard').setPointerCapture(e.pointerId);$('dcard').classList.add('dragging');};
+$('dcard').onpointermove=e=>{
+ if(!cardDrag||CQ.busy)return;const dx=e.clientX-cardDrag.x;const o=dx>=0?CQ.list[CQ.i].yes:CQ.list[CQ.i].no;
+ $('dcard').style.transform=`translateX(${dx}px) rotate(${dx/16}deg)`;const stamp=$('swipeStamp');stamp.textContent=o.label;stamp.classList.toggle('no',dx<0);stamp.style.opacity=Math.min(1,Math.abs(dx)/65);renderMeters(o.delta);
+};
+$('dcard').onpointerup=e=>{if(!cardDrag)return;const dx=e.clientX-cardDrag.x;cardDrag=null;$('dcard').classList.remove('dragging');if(Math.abs(dx)>Math.min(75,$('dcard').clientWidth*.28))choose(dx>0);else{$('dcard').style.transform='';$('swipeStamp').style.opacity=0;renderMeters();}};
+$('dcard').onpointercancel=()=>{cardDrag=null;$('dcard').classList.remove('dragging');$('dcard').style.transform='';$('swipeStamp').style.opacity=0;renderMeters();};
+$('dcard').onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();choose(e.key==='ArrowRight');}};
+function choose(yes){
+ if(!CQ||CQ.busy)return;CQ.busy=true;cardDrag=null;const card=CQ.list[CQ.i],o=yes?card.yes:card.no;
+ const seen=META.arcs.cardSeen||=( {} ),visits=META.arcs.actorVisits||=( {} );seen[card.id]=(seen[card.id]||0)+1;visits[card.actor]=(visits[card.actor]||0)+1;
+ const before=consequenceSnapshot();for(const k of ['world','money','unity'])META[k]=clamp(META[k]+o.delta[k],0,100);o.apply();showConsequences(before,card);META.years+=.05;renderMeters(o.delta,true);
+ $('dcard').style.transform=`translateX(${yes?450:-450}px) rotate(${yes?25:-25}deg)`;$('dcard').style.opacity=0;
+ saveMeta();waitUI(()=>{if(checkNationalEnd())return;CQ.i++;if(CQ.i<CQ.list.length)renderCard();else finishCards();},CQ.feedback?Math.min(4500,Math.max(2400,$('cardFeedback').textContent.length*28)):1850,!!CQ.feedback);
+}
+function finishCards(){saveMeta();if(LI<LEVELS.length-1)start(LI+1);else finishRun('השלמת את רצף המערכות',true);}
+
+// Input waits freeze simulation, including armies already in transit.
+function beginDeployment(){
+ S.armies=[];S.playTime=0;S.boostHintDone=false;S.boostTutorial=false;
+ for(const s of S.sites){s.residents=Math.max(25,s.residents);if(s.kind==='settlement'){s.g.requiredGuard=s.policy?15:LI<2?15:LI<5?20:25;s.g.cap=Math.max(s.g.cap,s.g.requiredGuard);}}
+ S.deployment=LV.tut==='basics'?null:S.sites.filter(s=>s.state==='up'&&s.kind==='settlement');S.deployTarget=null;
+ for(const s of S.sites.filter(s=>s.state==='up')){s.g.troops=0;s.secured=false;s.warn=null;}
+ for(const sector of new Set(S.sites.map(s=>s.g.sector))){const sites=S.sites.filter(s=>s.state==='up'&&s.g.sector===sector),bases=fieldP().filter(n=>n.sector===sector);const need=sites.reduce((a,s)=>a+s.g.cap,0)+25;const available=bases.reduce((a,n)=>a+n.troops,0);if(bases[0]&&available<need)bases[0].troops+=need-available;}
+ const building=S.sites.filter(s=>s.policy);S.introBuild=building.length?{t:0,sites:building}:null;for(const s of building){s.state='build';s.bt=0;s.g.hidden=true;}
+ if(MODS.baseStart<1)for(const n of S.nodes)if(n.owner==='P'&&n.kind==='base')n.troops=Math.floor(n.troops*MODS.baseStart);
+}
+function deploymentStep(){
+ if(!S.deployment)return false;
+ const next=S.deployment.find(s=>s.g.troops<thr(s.g)||incomingP(s.g)>0);
+ if(!next){S.deployment=null;S.deployTarget=null;S.frozen=false;S.hand=null;hideGeneral();S.camTo={x:W/2,y:H/2,z:1};return false;}
+ if(next!==S.deployTarget){S.deployTarget=next;S.frozen=true;S.hand=()=>({a:fieldP().filter(n=>n.sector===next.g.sector&&avail(n)>0).sort((a,b)=>dist(a,next.g)-dist(b,next.g))[0],b:next.g});S.camTo={x:W/2,y:H/2,z:1};say('קודם מגינים על היישוב. גרור '+thr(next.g)+' לוחמים לנקודת השמירה.');}
+ return true;
+}
+function startCinematic(kind,q,site=null){
+ if(S.cinematic||S.incident||S.over)return;
+ S.cinematic={kind,q,site,t:0,phase:'approach',back:{...S.camTo}};S.focus=null;S.camTo={x:q.x,y:q.y,z:2.15};hideGeneral();
+ toast(kind==='border'?'חוליה חדרה דרך הגבול!':site?.g.troops>0?'הכוח נערך לבלימת החוליה':'חוליה מתקרבת ליישוב ללא שמירה','bad');
+}
+function tickCinematic(dt){
+ const c=S.cinematic;if(!c)return;
+ c.t+=dt;
+ if(c.phase==='approach'&&c.t<.85)return;
+ if(c.phase==='approach'){
+   const tx=c.kind==='border'?c.q.x:c.site.x,ty=c.kind==='border'?BORDER_Y+55:c.site.y;
+   const dx=tx-c.q.x,dy=ty-c.q.y,d=Math.hypot(dx,dy),step=Math.min(d,110*dt);
+   if(d>8){c.q.x+=dx/(d||1)*step;c.q.y+=dy/(d||1)*step;S.camTo={x:c.q.x,y:c.q.y,z:2.15};return;}
+   c.phase='aftermath';c.t=0;
+   if(c.kind==='farm'&&c.site.g.troops>0){const n=Math.min(c.site.g.troops,c.q.n||3);c.site.g.troops-=n;S.lost+=n;c.site.sneak=null;c.site.warn=null;c.q.dead=true;S.enemyLost+=c.q.n||3;S.fx.push({type:'ring',x:tx,y:ty,c:'#f0d98f',t:0,d:1});toast(`החוליה חוסלה. ${n} יחידות אבדו; האזרחים מוגנים`,'good');}
+   else {if(c.site){c.site.state='destroyed';c.site.g.hidden=true;c.site.sneak=null;}c.q.dead=true;loseTo(tx,ty,c.kind==='border'?'חוליית מחבלים חדרה לישראל והתפוצצה':c.site.kind==='ranch'?'חוליית מחבלים הגיעה לחווה ללא כוח מגן':'חוליית מחבלים הגיעה ליישוב ללא כוח מגן',c.kind==='border'?20:c.site.residents);}
+ }else if(c.t>=1.1){S.cinematic=null;if(S.incident)revealImpact();else S.camTo=c.back;}
+}
+function revealImpact(){if(!S.incident)return;$('impactScreen').hidden=false;}
+function loseTo(x,y,why,casualties=25){
+ if(S.over||S.incident)return;casualties=Math.max(25,casualties);S.israeliCiv+=casualties;const fatal=true;
+ S.incident={fatal,why,x,y};S.over=fatal;S.win=false;S.why=why;S.hand=null;S.focus=null;S.frozen=false;S.camTo={x,y,z:2.4};hideGeneral();
+ S.fx.push({type:'blast',x,y,t:0,d:1.2});$('impactTitle').textContent=fatal?'ההגנה נפרצה':'החווה נפגעה';$('impactText').textContent=`${why}. ${casualties} אזרחים נהרגו.`;
+ $('impactNext').textContent=fatal?'לסיכום הכהונה ←':'חזרה לקרב';
+ if(!S.cinematic){S.cinematic={phase:'aftermath',t:-.6,back:{x:W/2,y:H/2,z:1}};S.cam={x,y,z:2.4};}
+}
+// The power-up lesson waits for actual battle time, never deployment time.
+TUT.special=[];TUT.tech=[];
+function powerupLesson(dt){
+ if(S.deployment||S.over)return false;S.playTime+=dt;
+ if(S.nodes.filter(n=>!n.hidden&&n.kind!=='guard').every(n=>n.owner==='P'))return false;
+ if(LI!==1||S.boostHintDone||S.playTime<18||!playerUnderPressure())return false;
+ S.boostHintDone=true;if(Object.values(S.used).some(n=>n>0)||stock('reserve')<1)return false;
+ say('יש תגבורת: מילואים ורחפנים, בתחתית המסך. לחץ על מילואים כדי להזעיק כוח.');S.boostTutorial=true;S.paused=true;S.hand=null;
+ const button=$('bReserve');if(!button.querySelector('.tutorial-finger')){const finger=document.createElement('img');finger.src=HAND.src;finger.className='tutorial-finger';finger.alt='';button.appendChild(finger);}
+ return true;
+}
+function plannedRanches(){
+ if(LV.tut==='basics')return LV.ranches;
+ const grade=MODS.settlementFunding||'medium',limit=grade==='high'?1:grade==='medium'?2:4;
+ const pool=LV.ranches.concat((LV.extraSlots||[]).slice(0,MODS.extraRanches)),selected=[];
+ for(const r of pool){if(selected.length>=limit)break;if(selected.every(s=>dist(s,r)>170*W/720))selected.push({...r});}
+ selected.forEach((r,i)=>r.at=(grade==='high'?22:grade==='medium'?16:10)+i*Math.max(12,24-LI*2));return selected;
+}
+// Bases on the southern boundary are checkpoints, never squad attack targets.
+function pickBase(from){return S.nodes.filter(n=>n.owner==='P'&&n.kind==='base'&&n.y>=BORDER_Y-220*W/720&&(!from.sector||n.sector===from.sector)).sort((a,b)=>dist(a,from)-dist(b,from))[0]||null;}
+function resolveSquadBase(q,b){
+ if(b.troops<b.cap*.5){q.phase='cross';q.up=true;q.cyc=99;startCinematic('border',q);}
+ else{q.dead=true;S.enemyLost+=q.n;S.fx.push({type:'ring',x:q.x,y:q.y,c:'#e8d9a1',t:0,d:.8});toast('הגבול מאויש. החוליה נבלמה','good');}
+}
+// Separate all clickable points and leave room below each for a label.
+function spaceMapPoints(){
+ const k=W/720,sectorMin=n=>LV.sector==='both'?(n.sector==='wb'?W*.55:55*k):55*k,sectorMax=n=>LV.sector==='both'?(n.sector==='gaza'?W*.44:W-55*k):W-55*k;
+ for(let pass=0;pass<100;pass++)for(let i=0;i<S.nodes.length;i++)for(let j=i+1;j<S.nodes.length;j++){
+  const a=S.nodes[i],b=S.nodes[j];if(a.sector!==b.sector)continue;
+  const dx=b.x-a.x,dy=b.y-a.y,minX=a.r+b.r+38,minY=a.r+b.r+78;
+  if(Math.abs(dx)>=minX||Math.abs(dy)>=minY)continue;
+  const horizontal=(minX-Math.abs(dx))<(minY-Math.abs(dy));const move=(horizontal?minX-Math.abs(dx):minY-Math.abs(dy))/2+.2;
+  for(const[n,dir]of[[a,-1],[b,1]]){if(horizontal)n.x=clamp(n.x+dir*(Math.sign(dx)||1)*move,sectorMin(n),sectorMax(n));else n.y=clamp(n.y+dir*(Math.sign(dy)||1)*move,75*k,BORDER_Y-50*k);}
+ }
+ for(const s of S.sites){if(s.kind==='ranch'){s.x=s.g.x;s.y=s.g.y+100*k;}else {s.x=s.g.x;s.y=s.g.y+145*k;} }
+}
+
+function refreshArmies(){
+ for(const a of S.armies||[]){a.members=S.units.filter(u=>u.o==='E'&&!u.dead&&u.army===a);a.n=a.members.length+S.dispatch.filter(d=>d.army===a).reduce((n,d)=>n+d.left,0);a.dead=a.n===0;if(a.members.length){a.x=a.members.reduce((n,u)=>n+u.x,0)/a.members.length;a.y=a.members.reduce((n,u)=>n+u.y,0)/a.members.length;}a.lastX=a.x;a.lastY=a.y;a.up=!!a.members.length;}
+ S.armies=(S.armies||[]).filter(a=>!a.dead);
+}
+function armyForDispatch(d){
+ if(!d.army){const a={isSquad:true,isArmy:true,r:22,n:d.left,x:d.src.x,y:d.src.y,up:true,dead:false,sector:d.src.sector,members:[]};(S.armies||(S.armies=[])).push(a);d.army=a;}return d.army;
+}
+function drawArmies(){refreshArmies();for(const a of S.armies||[]){if(!a.up)continue;const n=a.members.length;ctx.save();ctx.fillStyle='#8e281fe8';ctx.strokeStyle='#f3d7a4';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(a.x-14,a.y-29,28,22,8);ctx.fill();ctx.stroke();ctx.fillStyle='#fff1d6';ctx.font=`700 15px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n,a.x,a.y-18);ctx.restore();}}
+function raidContact(q){
+ if(q.dead||!q.up)return;
+ for(const u of S.units){if(u.dead||u.o!=='P'||dist(u,q)>25)continue;
+  u.dead=true;S.lost++;if(!q.civ)S.enemyLost++;q.n--;S.fx.push({type:'pop',x:q.x,y:q.y,t:0,d:.35});
+  if(q.n<=0){q.dead=true;S.nKill=(S.nKill||0)+1;toast(q.civ?'חוליית האזרחים נעצרה':'החוליה חוסלה','good');break;}
+ }
+}
+function raidWaypoint(q,roam=false){
+ const xmin=LV.sector==='both'&&q.sector==='wb'?W*.55:30,xmax=LV.sector==='both'&&q.sector==='gaza'?W*.44:W-30;
+ const enemy=S.nodes.filter(n=>n.owner==='E'&&!n.hidden&&(!q.sector||n.sector===q.sector));
+ if(roam&&enemy.length){const n=enemy[Math.floor(Math.random()*enemy.length)];return{x:clamp(n.x+rr([-60,60]),xmin,xmax),y:clamp(n.y+rr([-60,60]),35,BORDER_Y-100)};}
+ const t=q.site||q.target,dx=t.x-q.x,dy=t.y-q.y,len=Math.hypot(dx,dy)||1;
+ if(len<140)return{x:t.x,y:t.y};const step=Math.min(180,len*.5),side=rr([-95,95]);return{x:clamp(q.x+dx/len*step-dy/len*side,xmin,xmax),y:clamp(q.y+dy/len*step+dx/len*side,35,BORDER_Y-40)};
+}
+function createRaid(from,site=null){
+ const cfg=LV.special||{n:3,speed:52};const gate=pickBase(from);if(!site&&!gate)return null;
+ const q={isSquad:true,r:16,sector:from.sector,x:clamp(from.x+70,35,W-35),y:from.y+100,n:cfg.n||3,phase:'roam',roamLeft:rr([8,13]),up:true,cyc:3.5,lastX:from.x,lastY:from.y+20,target:site?site.g:gate,site,goal:site?'civilian':'border',dead:false};q.waypoint=raidWaypoint(q,true);S.specials.push(q);return q;
+}
+function spawnSpecial(){
+ const cfg=LV.special;if(!cfg||S.specials.filter(q=>!q.dead&&!q.civ).length>=cfg.max)return;
+ const en=S.nodes.filter(n=>n.owner==='E'&&!n.hidden);if(!en.length)return;const from=en[Math.floor(Math.random()*en.length)];
+ const sites=S.sites.filter(s=>s.state==='up'&&(!from.sector||s.g.sector===from.sector));
+ const site=sites.length&&Math.random()<.55?sites[Math.floor(Math.random()*sites.length)]:null;
+ const q=createRaid(from,site);if(!q)return;S.nSpec=(S.nSpec||0)+1;
+ if(LV.tut==='special'&&!S.seenSpecial){S.seenSpecial=true;q.y=Math.max(q.y,H*.24);q.lastX=q.x;q.lastY=q.y;S.briefTarget=q;say('זו חוליית מחבלים. היא מסתובבת בשטח האויב, נעלמת ומנסה להגיע ליישוב או לחדור לישראל. גרור אליה כוח כשהיא גלויה כדי ליירט אותה.',{pause:true,onOk:()=>{S.briefTarget=null}});}
+ else toast('חוליה חשודה זוהתה','bad');
+}
+function spawnSneak(s){
+ if(s.raid&&!s.raid.dead)return;
+ const from=S.nodes.filter(n=>n.owner==='E'&&!n.hidden&&n.sector===s.g.sector).sort((a,b)=>dist(a,s)-dist(b,s))[0];if(!from)return;
+ s.raid=createRaid(from,s);toast('חוליה חשודה מתארגנת בשטח האויב','bad');
+}
+function updateSpecials(dt){
+ const cfg=LV.special;
+ if(cfg&&S.aiOn){S.spec-=dt;if(S.spec<=0){S.spec=rr(cfg.every);spawnSpecial();if(S.paused)return;}}
+ if(MODS.civil){S.civT-=dt;if(S.civT<=0){S.civT=rr([30,40]);spawnCivil();}}
+ for(const q of S.specials){
+  if(q.dead)continue;raidContact(q);if(q.dead)continue;
+  if(S.techT>0){q.up=true;q.lastX=q.x;q.lastY=q.y;if(!q.civ){q.radarHit=(q.radarHit||0)+dt;if(q.radarHit>=.6){S.enemyLost+=q.n;q.dead=true;S.fx.push({type:'blast',x:q.x,y:q.y,t:0,d:.9,small:true});toast('רדאר: החוליה חוסלה','good');}}continue;}
+  if(q.civ){if(q.phase==='linger'){q.lt-=dt;if(q.lt<=0)q.phase='move';continue;}const t=q.target,d=dist(q,t);if(d<22){const k=15+Math.floor(Math.random()*6);S.civKilled+=k;S.retaliation=true;S.spec=Math.min(S.spec,3);q.dead=true;S.fx.push({type:'blast',x:t.x,y:t.y,t:0,d:.9,small:true});toast(`${k} אזרחים פלסטינים נהרגו בכפר`,'bad');continue;}q.x+=(t.x-q.x)/d*Math.min(d,110*dt);q.y+=(t.y-q.y)/d*Math.min(d,110*dt);raidContact(q);continue;}
+  if(q.site?.state==='destroyed'||!q.target||q.target.owner!=='P'){q.site=null;q.target=pickBase(q);q.goal='border';if(!q.target){q.dead=true;continue;}q.waypoint=raidWaypoint(q);}
+  q.cyc-=dt;if(q.cyc<=0){q.up=!q.up;q.cyc=q.up?rr([3.5,5]):rr([7,11]);}
+  if(q.phase==='roam'){q.roamLeft-=dt;if(q.roamLeft<=0){q.phase='move';q.waypoint=raidWaypoint(q);}}
+  if(!q.waypoint||dist(q,q.waypoint)<15)q.waypoint=raidWaypoint(q,q.phase==='roam');
+  const t=q.waypoint,d=dist(q,t)||1,step=Math.min(d,(cfg?.speed||52)*(q.up?1:1.2)*dt);q.x+=(t.x-q.x)/d*step;q.y+=(t.y-q.y)/d*step;
+  if(q.up){q.lastX=q.x;q.lastY=q.y;}raidContact(q);if(q.dead)continue;
+  if(q.phase==='move'&&q.site&&dist(q,q.site)<24){q.up=true;raidContact(q);if(q.dead)continue;startCinematic('farm',q,q.site);return;}
+  if(q.phase==='move'&&!q.site&&dist(q,q.target)<q.target.r){q.up=true;raidContact(q);if(q.dead)continue;resolveSquadBase(q,q.target);if(S.cinematic)return;}
+ }
+ S.specials=S.specials.filter(q=>!q.dead);
+}
+
+function playerUnderPressure(){
+ const incoming=S.units.filter(u=>!u.dead&&u.o==='E'&&u.dst?.owner==='P');
+ if(incoming.some(u=>dist(u,u.dst)<320&&incoming.filter(v=>v.dst===u.dst).length>=Math.max(3,u.dst.troops*.35)))return true;
+ if(S.specials.some(q=>!q.dead&&!q.civ&&q.up&&dist(q,q.site||q.target)<450))return true;
+ return S.sites.some(s=>s.state==='up'&&s.warn!==null&&s.warn>0&&s.warn<Math.min(12,s.warnMax*.4));
+}
+function checkEnd(){
+ if(S.over||S.incident||S.cinematic)return;
+ const field=S.nodes.filter(n=>!n.hidden&&n.kind!=='guard');
+ if(field.length&&field.every(n=>n.owner==='P')&&(LV.tut!=='basics'||S.tutDone)){
+  S.over=true;S.win=true;S.endAt=S.t+1.2;S.why='כל השטח בשליטתכם';S.hand=null;hideGeneral();return;
+ }
+ const hasForce=field.some(n=>n.owner==='P')||S.units.some(u=>!u.dead&&u.o==='P')||S.nodes.some(n=>n.kind==='guard'&&!n.hidden&&n.troops>=1);
+ if(!hasForce){S.over=true;S.win=false;S.endAt=S.t+.6;S.why='כל הכוחות אבדו';}
+}
+
+function tickOpeningConstruction(dt){
+ const intro=S.introBuild;if(!intro)return false;
+ hideGeneral();S.hand=null;intro.t+=dt;
+ for(const s of intro.sites)s.bt=Math.min(1,intro.t/2.6)*BUILD_TIME;
+ if(intro.t>=2.6){for(const s of intro.sites){s.state='up';s.g.hidden=false;s.pop=1;}S.introBuild=null;toast('היישובים הוקמו — קודם מאבטחים','warn');}
+ return true;
+}
+function drawSquadArrow(){
+ const q=S.briefTarget;if(!q||q.dead)return;
+ const k=W/720,bob=reduced?0:Math.sin(S.rt*4)*5*k;
+ ctx.save();ctx.translate(q.x,q.y-28*k+bob);ctx.fillStyle='#fff0a6';ctx.strokeStyle='#493719';ctx.lineWidth=3*k;
+ ctx.beginPath();ctx.moveTo(-9*k,-58*k);ctx.lineTo(9*k,-58*k);ctx.lineTo(9*k,-25*k);ctx.lineTo(23*k,-25*k);ctx.lineTo(0,0);ctx.lineTo(-23*k,-25*k);ctx.lineTo(-9*k,-25*k);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+}
+
+// ---------- loop ----------
+let running=false,last=0;
+function frame(ts){
+  const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+  if(MODE==='budget'){updateBudget(dt);hud(dt);drawBudget()}
+  else{if(running||(S.over&&!S.shown))update(dt);hud(dt);draw();}
+  requestAnimationFrame(frame);
+}
+function start(li,retrying=false){
+ if(!LEVELS[li])return;hideSurfaces();MODE='game';bar.style.visibility='';
+ if(!retrying)entry={li,meta:structuredClone(META),mods:structuredClone(MODS)};
+ for(const k in TUT)for(const st of TUT[k])st.entered=false;
+ prepareBattleEffects();reset(li);$('startScreen').hidden=true;running=true;toast(`${LV.name} · ${LV.region}`);
+}
+function retryLevel(){if(!entry)return;META=structuredClone(entry.meta);MODS=structuredClone(entry.mods);start(entry.li,true);}
+function showMenu(choose=false){
+ running=false;MODE='game';BG=null;CQ=null;bar.style.visibility='';hideSurfaces();
+ reset(LI);toastT=0;toastEl.style.opacity=0;$('startScreen').hidden=false;
+ $('levelChoices').hidden=!choose;$('chooseLevelBtn').setAttribute('aria-expanded',String(choose));
+}
+function launch(li,mode){
+ playMode=mode;META=freshMeta();MODS={...DEF_MODS};LAST_RESULT=null;
+ buildCampaignWorlds(META.seed);renderLevelMenu();saveMeta();start(li);
+}
+function renderLevelMenu(){
+ $('levelChoices').innerHTML=LEVELS.map((l,i)=>`<button class="big ${i%3===1?'mid':i%3===2?'alt':''}" id="lvl${i}Btn" type="button"><span>שלב ${i+1}</span><small>${l.region}</small></button>`).join('')+'<button class="ghost" id="iranPreviewBtn" type="button">איראן · המחשה</button>';
+ LEVELS.forEach((_,i)=>$('lvl'+i+'Btn').onclick=()=>launch(i,'single'));
+ $('iranPreviewBtn').onclick=()=>{playMode='single';$('startScreen').hidden=true;showIran();};
+}
+$('startBtn').onclick=()=>launch(0,'campaign');
+$('chooseLevelBtn').onclick=()=>{const open=$('levelChoices').hidden;$('levelChoices').hidden=!open;$('chooseLevelBtn').setAttribute('aria-expanded',String(open));};
+$('homeBtn').onclick=()=>showMenu();$('nextBtn').onclick=()=>start(LI+1);$('againBtn').onclick=retryLevel;$('restartBtn').onclick=retryLevel;$('menuBtn').onclick=()=>showMenu(playMode==='single');
+$('zoomIn').onclick=()=>{if(canAct())S.camTo.z=Math.min(2.6,S.camTo.z+.4);};$('zoomOut').onclick=()=>{if(canAct())S.camTo={x:W/2,y:H/2,z:1};};
+document.addEventListener('visibilitychange',()=>{last=performance.now()});
+window.__game={get S(){return S},get BG(){return BG},get META(){return META},get MODS(){return MODS},get CQ(){return CQ},get LV(){return LV},get levels(){return LEVELS},get mode(){return MODE},get result(){return LAST_RESULT},order,update,start,launch,retryLevel,useReserve,useDrones,useTech,useCluster,openBudget,applyBudget,allocate,getCardPool,dialogueCard,selectDialogue,inquiryState,budgetGrade,fundSettlement,openCards,choose,finishCards,showIran,finishRun,loseTo,checkEnd,thr,tickOpeningConstruction,playerUnderPressure,powerupLesson,send,aiStep,updateDrones,targetAt,refreshArmies,raidContact,createRaid,spawnSpecial,updateSpecials,updateSites,spaceMapPoints,transferBudget,funding,setRun:v=>running=v,ok:()=>genOk.click()};
+
+fit();
+const boot=()=>{buildCampaignWorlds(META.seed);renderLevelMenu();fit();reset(0);requestAnimationFrame(t=>{last=t;frame(t)})};
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(boot,boot);
+})();
+</script>
