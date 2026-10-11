@@ -1184,9 +1184,22 @@ function decorateTerrain(g,T){
   if(T.combined){g.fillStyle='#ece2c0';g.fillRect(W*.485,0,W*.035,H);g.strokeStyle='#7b7159';g.setLineDash([10,12]);g.beginPath();g.moveTo(W*.502,0);g.lineTo(W*.502,H);g.stroke();g.setLineDash([]);}
   const k=W/720;for(const p of T.places||[]){g.font=`700 ${20*k}px Rubik`;g.textAlign='center';g.fillStyle='#645b43';g.fillText(p.name,p.x*k,p.y*k);}
 }
+// New budget settlements go where their area overlaps no other settlement.
+function freeSettlementSpot(slot,sector,extra){
+  const k=W/720,both=LV.sector==='both',lo=both&&sector==='wb'?W*.55:55*k,hi=both&&sector==='gaza'?W*.44:W-55*k;
+  const others=S.sites.filter(s=>s.kind==='settlement').map(s=>({x:s.g.x,y:s.g.y,sector:s.g.sector})).concat(extra.map(s=>({x:s.gx,y:s.gy,sector:s.sector})));
+  const rx=184*2+20,ry=(125*k+34)*2+20,top=H*.3,bottom=BORDER_Y-420*k;let best=null;
+  for(let y=top;y<=bottom;y+=20*k)for(let x=lo+190;x<=hi-190;x+=20*k){
+    let sep=9;for(const o of others)if(!o.sector||o.sector===sector)sep=Math.min(sep,((x-o.x)/rx)**2+((y-o.y)/ry)**2);
+    const near=Math.hypot(x-slot.x,y-slot.y),score=(sep>=1?0:1e6*(1-sep))+near;
+    if(!best||score<best.score)best={x,y,score};
+  }
+  return best||{x:slot.x,y:slot.y};
+}
 function applySitePolicy(){
   const k=W/720,extra=(LV.extraSettlements||[]).map(x=>({...x}));
-  for(let i=0;i<(MODS.extraSettlements||0);i++){const slot=(LV.extraSlots||[])[i]||(LV.extraSlots||[])[0];if(slot)extra.push({policy:true,x:slot.x+i*90*k,y:slot.y+95*k,gx:slot.x+i*90*k,gy:slot.y,residents:25,cap:15,start:0,sector:slot.sector||LV.sector,title:i?'התיישבות חדשה · גבעת אור':'התיישבות חדשה · נאות גבעה'});}
+  const used=new Set(S.sites.map(s=>s.title).concat(extra.map(s=>s.title))),names=['נאות גבעה','רמת השחר','גבעת הזית','מצפה אלון','נווה צור'].map(n=>'התיישבות חדשה · '+n).filter(n=>!used.has(n));
+  for(let i=0;i<(MODS.extraSettlements||0);i++){const slots=LV.extraSlots||[],side=LV.sector==='both'?slots.filter(r=>r.sector===(i%2?'wb':'gaza')):slots,slot=side[LV.sector==='both'?i>>1:i]||side[0]||slots[0];if(!slot)continue;const sector=slot.sector||LV.sector,spot=freeSettlementSpot(slot,sector,extra);extra.push({policy:true,x:spot.x,y:spot.y+145*k,gx:spot.x,gy:spot.y,residents:25,cap:15,start:0,sector,title:names[i%names.length]});}
   for(const [i,st] of extra.entries()){
     const g={id:'sg'+i,kind:'guard',owner:'P',x:st.gx,y:st.gy,troops:st.start??st.cap,...KIND.guard,cap:st.cap,sector:st.sector,hidden:false,flash:0,pending:0};
     if(st.policy)g.requiredGuard=15;S.nodes.push(g);S.sites.push({kind:'settlement',policy:!!st.policy,title:st.title,x:st.x,y:st.y,residents:st.residents,g,warn:null,secured:g.troops>=thr(g),sneak:null,pop:1,state:'up'});
