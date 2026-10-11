@@ -873,7 +873,7 @@ function updateTerritory(){
     const i=y*GW+x,l=lab[i];if(l===-1)continue;
     if(l<=-2){ // settlement / farm area: blue until its guard quota is filled, then army colour; always a closed blue edge
       const z=terr.zones[-2-l];let edgeZ=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=GW||yy>=GH)continue;if(lab[yy*GW+xx]!==l)edgeZ=true}
-      img.data.set(edgeZ?ZONE_EDGE:(filled(z)?TINT.P:TINT.Z),i*4);continue}
+      img.data.set(edgeZ?ZONE_EDGE:TINT.Z,i*4);continue}
     const o=ns2[l].owner;let c=TINT[o];
     let edge=0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=GW||yy>=GH)continue;const l2=lab[yy*GW+xx];
       if(l2>=0&&l2!==l)edge=Math.max(edge,ns2[l2].owner!==o?2:1)}
